@@ -9,6 +9,102 @@ segment .text
 	extern putchar
 	global asm_main
 
+asm_main:
+	push	rbp						; 
+	mov	rbp, rsp					;
+	sub	rsp, 480					; set rsp and rbp
+	mov	rax, QWORD fs:40
+	mov	QWORD -8[rbp], rax
+	xor	eax, eax
+	jmp	.L87
+.L92:
+	mov	DWORD -464[rbp], 1			; -464[rbp] = first number sign = 1
+	mov	DWORD -456[rbp], 1			; -456[rbp] = second number sign  = 1
+	lea	rax, -464[rbp]				; rax = -464[rbp] = address(first number sign)
+	mov	QWORD -448[rbp], rax		; -448[rbp] = rax =  address(first number sign)
+	lea	rax, -460[rbp]				; rax = -460[rbp] = address(first number lentgh)
+	mov	QWORD -440[rbp], rax		; -440[rbp] = rax =  address(first number lentgh)
+	lea	rax, -456[rbp]				; rax = -456[rbp] = address(second number sign)
+	mov	QWORD -432[rbp], rax		; -432[rbp] = rax =  address(second number sign)
+	lea	rax, -452[rbp]				; rax = -452[rbp] = address(second number lentgh)
+	mov	QWORD -424[rbp], rax		; -424[rbp] = rax =  address(second number lentgh)
+	call	getchar					; get char, this char is equal to + or - or x or / or q
+	mov	rdx, QWORD -440[rbp]		; 3rd parameter of get_number = address(first number lentgh)				
+	mov	rsi, QWORD -448[rbp]		; 2nd parameter of get_number = address(first number sign)
+	mov	rdi, -416[rbp]				; 1st parameter of get_number = address(first number array[0]) = -416[rbp]
+	call	get_number				; initialize first number; first number[i] = *(-416[rbp] + 2 * i)
+	mov	rdx, QWORD -424[rbp]
+	mov	rcx, QWORD -432[rbp]
+	lea	rax, -208[rbp]
+	mov	rsi, rcx
+	mov	rdi, rax
+	call	get_number
+	cmp	BYTE -465[rbp], 43			; character equal to '+'
+	jne	.L88
+	mov	r8d, DWORD -452[rbp]
+	mov	edi, DWORD -456[rbp]
+	mov	edx, DWORD -460[rbp]
+	mov	esi, DWORD -464[rbp]
+	lea	rcx, -208[rbp]
+	lea	rax, -416[rbp]
+	mov	r9d, r8d
+	mov	r8d, edi
+	mov	rdi, rax
+	call	add
+	jmp	.L87
+.L88:
+	cmp	BYTE -465[rbp], 45
+	jne	.L90
+	mov	r8d, DWORD -452[rbp]
+	mov	edi, DWORD -456[rbp]
+	mov	edx, DWORD -460[rbp]
+	mov	esi, DWORD -464[rbp]
+	lea	rcx, -208[rbp]
+	lea	rax, -416[rbp]
+	mov	r9d, r8d
+	mov	r8d, edi
+	mov	rdi, rax
+	call	subtract
+	jmp	.L87
+.L90:
+	cmp	BYTE -465[rbp], 120
+	jne	.L91
+	mov	r8d, DWORD -452[rbp]
+	mov	edi, DWORD -456[rbp]
+	mov	edx, DWORD -460[rbp]
+	mov	esi, DWORD -464[rbp]
+	lea	rcx, -208[rbp]
+	lea	rax, -416[rbp]
+	mov	r9d, r8d
+	mov	r8d, edi
+	mov	rdi, rax
+	call	multiple
+	jmp	.L87
+.L91:
+	cmp	BYTE -465[rbp], 47
+	jne	.L87
+	mov	r8d, DWORD -452[rbp]
+	mov	edi, DWORD -456[rbp]
+	mov	edx, DWORD -460[rbp]
+	mov	esi, DWORD -464[rbp]
+	lea	rcx, -208[rbp]
+	lea	rax, -416[rbp]
+	mov	r9d, r8d
+	mov	r8d, edi
+	mov	rdi, rax
+	call	divide
+.L87:
+	call	getchar
+	mov	BYTE -465[rbp], al
+	cmp	BYTE -465[rbp], 113
+	jne	.L92
+	mov	eax, 0
+	mov	rdx, QWORD -8[rbp]
+	sub	rdx, QWORD fs:40
+	leave
+	ret
+
+
 print_array:
 	push	rbp
 	mov	rbp, rsp
@@ -994,103 +1090,6 @@ divide:
 	call	print_array
 	mov	rax, QWORD -8[rbp]
 	sub	rax, QWORD fs:40
-	leave
-	ret
-
-asm_main:
-	push	rbp
-	mov	rbp, rsp
-	sub	rsp, 480
-	mov	rax, QWORD fs:40
-	mov	QWORD -8[rbp], rax
-	xor	eax, eax
-	jmp	.L87
-.L92:
-	mov	DWORD -464[rbp], 1
-	mov	DWORD -456[rbp], 1
-	lea	rax, -464[rbp]
-	mov	QWORD -448[rbp], rax
-	lea	rax, -460[rbp]
-	mov	QWORD -440[rbp], rax
-	lea	rax, -456[rbp]
-	mov	QWORD -432[rbp], rax
-	lea	rax, -452[rbp]
-	mov	QWORD -424[rbp], rax
-	call	getchar
-	mov	rdx, QWORD -440[rbp]
-	mov	rcx, QWORD -448[rbp]
-	lea	rax, -416[rbp]
-	mov	rsi, rcx
-	mov	rdi, rax
-	call	get_number
-	mov	rdx, QWORD -424[rbp]
-	mov	rcx, QWORD -432[rbp]
-	lea	rax, -208[rbp]
-	mov	rsi, rcx
-	mov	rdi, rax
-	call	get_number
-	cmp	BYTE -465[rbp], 43
-	jne	.L88
-	mov	r8d, DWORD -452[rbp]
-	mov	edi, DWORD -456[rbp]
-	mov	edx, DWORD -460[rbp]
-	mov	esi, DWORD -464[rbp]
-	lea	rcx, -208[rbp]
-	lea	rax, -416[rbp]
-	mov	r9d, r8d
-	mov	r8d, edi
-	mov	rdi, rax
-	call	add
-	jmp	.L87
-.L88:
-	cmp	BYTE -465[rbp], 45
-	jne	.L90
-	mov	r8d, DWORD -452[rbp]
-	mov	edi, DWORD -456[rbp]
-	mov	edx, DWORD -460[rbp]
-	mov	esi, DWORD -464[rbp]
-	lea	rcx, -208[rbp]
-	lea	rax, -416[rbp]
-	mov	r9d, r8d
-	mov	r8d, edi
-	mov	rdi, rax
-	call	subtract
-	jmp	.L87
-.L90:
-	cmp	BYTE -465[rbp], 120
-	jne	.L91
-	mov	r8d, DWORD -452[rbp]
-	mov	edi, DWORD -456[rbp]
-	mov	edx, DWORD -460[rbp]
-	mov	esi, DWORD -464[rbp]
-	lea	rcx, -208[rbp]
-	lea	rax, -416[rbp]
-	mov	r9d, r8d
-	mov	r8d, edi
-	mov	rdi, rax
-	call	multiple
-	jmp	.L87
-.L91:
-	cmp	BYTE -465[rbp], 47
-	jne	.L87
-	mov	r8d, DWORD -452[rbp]
-	mov	edi, DWORD -456[rbp]
-	mov	edx, DWORD -460[rbp]
-	mov	esi, DWORD -464[rbp]
-	lea	rcx, -208[rbp]
-	lea	rax, -416[rbp]
-	mov	r9d, r8d
-	mov	r8d, edi
-	mov	rdi, rax
-	call	divide
-.L87:
-	call	getchar
-	mov	BYTE -465[rbp], al
-	cmp	BYTE -465[rbp], 113
-	jne	.L92
-	mov	eax, 0
-	mov	rdx, QWORD -8[rbp]
-	sub	rdx, QWORD fs:40
 	leave
 	ret
 

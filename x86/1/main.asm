@@ -31,8 +31,8 @@ asm_main:
 	call	getchar					; get char, this char is equal to + or - or x or / or q
 	mov	rdx, QWORD -440[rbp]		; 3rd parameter of get_number = address(first number lentgh)				
 	mov	rsi, QWORD -448[rbp]		; 2nd parameter of get_number = address(first number sign)
-	mov	rdi, -416[rbp]				; 1st parameter of get_number = address(first number array[0]) = -416[rbp]
-	call	get_number				; initialize first number; first number[i] = *(-416[rbp] + 2 * i)
+	lea	rdi, -416[rbp]				; 1st parameter of get_number = address(first number array[0]) = -416[rbp]
+	call	get_number				; initialize first number; first number[i] = [-416[rbp] + 2 * i]
 	mov	rdx, QWORD -424[rbp]
 	mov	rcx, QWORD -432[rbp]
 	lea	rax, -208[rbp]

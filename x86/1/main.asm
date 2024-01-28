@@ -134,7 +134,7 @@ add:
 	jmp	.add_end
 .signs_are_differnt:
 	mov	r8d, 0						; 5th parameter of subtract_first_element_from_second = 0
-	mov	ecx, DWORD -680[rbp]		; 4th parameter of subtract_first_element_from_second = address(smaller number lentgh)
+	mov	ecx, DWORD -680[rbp]		; 4th parameter of subtract_first_element_from_second = smaller number lentgh
 	lea	rdx, -208[rbp]				; 3rd parameter of subtract_first_element_from_second = address(smaller number[0])
 	mov	rsi, QWORD -664[rbp]		; 2nd parameter of subtract_first_element_from_second = address(bigger number lentgh)
 	lea	rdi, -416[rbp]				; 1st parameter of subtract_first_element_from_second = address(bigger number[0])
@@ -239,6 +239,148 @@ multiple:
 	imul	eax, DWORD -268[rbp]	; eax = first number sign * second number sign
 	mov	edx, eax					; 3rd parameter of print array = output number sign = first number sign * second number sign
 	mov	esi, DWORD -232[rbp]		; 2nd parameter of print array = output number lentgh
+	lea	rdi, -208[rbp]				; 1st parameter of print array = address(output number[0])
+	call	print_array
+	leave
+	ret
+
+divide:
+	push	rbp
+	mov	rbp, rsp
+	sub	rsp, 272					; set rsp and rbp
+	mov	QWORD -248[rbp], rdi		; 1st parameter of function = -248[rbp] = address(first number array[0])
+	mov	DWORD -252[rbp], esi		; 2nd parameter of function = -252[rbp] = first number sign
+	mov	DWORD -256[rbp], edx		; 3rd parameter of function = -256[rbp] = first number lentgh
+	mov	QWORD -264[rbp], rcx		; 4th parameter of function = -264[rbp] = address(second number array[0])
+	mov	DWORD -268[rbp], r8d		; 5th parameter of function = -268[rbp] = second number sign
+	mov	DWORD -272[rbp], r9d		; 6th parameter of function = -272[rbp] = second number lentgh
+	mov	DWORD -236[rbp], 0			; loop temp number = i
+	jmp	.check_loop_condition4
+.loop_body4:
+	mov	eax, DWORD -236[rbp]
+	cdqe
+	mov	WORD -208[rbp+rax*2], 0		; output number[i] = 0
+	add	DWORD -236[rbp], 1			; i++
+.check_loop_condition4:
+	cmp	DWORD -236[rbp], 99
+	jle	.loop_body4
+	lea	rax, -256[rbp]
+	mov	QWORD -224[rbp], rax		; -224[rbp] = address(first number lentgh)
+	jmp	.check_loop_condition5
+.loop_body5:
+	mov	eax, DWORD -256[rbp]
+	sub	eax, DWORD -272[rbp]
+	sub	eax, 1
+	cdqe
+	movzx	eax, WORD -208[rbp + rax * 2]	; eax = output number[first number lentgh - second number lentgh - 1]
+	lea	edx, 1[rax]					; edx = rax + 1
+	mov	eax, DWORD -256[rbp]
+	sub	eax, DWORD -272[rbp]
+	sub	eax, 1
+	cdqe
+	mov	WORD -208[rbp + rax * 2], dx	; output number[first number lentgh - second number lentgh - 1] += 1
+	mov	eax, DWORD -256[rbp]
+	sub	eax, DWORD -272[rbp]
+	lea	r8d, -1[rax]				; 5th parameter of subtract_first_element_from_second = first number lentgh - second number lentgh - 1
+	mov	ecx, DWORD -272[rbp]		; 4th parameter of subtract_first_element_from_second = second number lentgh
+	mov	rdx, QWORD -264[rbp]		; 3rd parameter of subtract_first_element_from_second = address(second number[0])
+	mov	rsi, QWORD -224[rbp]		; 2nd parameter of subtract_first_element_from_second = address(first number lentgh)
+	mov	rdi, QWORD -248[rbp]		; 1st parameter of subtract_first_element_from_second = address(first number[0])
+	call	subtract_first_element_from_second
+.check_loop_condition5:
+	mov	eax, DWORD -256[rbp]
+	cmp	DWORD -272[rbp], eax		; compare second number lentgh with first number lentgh
+	jl	.loop_body5
+	jmp	.check_loop_condition6		; now second number lentgh with first number lentgh
+.loop_body6:
+	movzx	eax, WORD -208[rbp]		; eax = output number[0]
+	cdqe
+	lea	edx, 1[rax]					; edx = output number[0] + 1
+	cdqe
+	mov	WORD -208[rbp], dx			; output number[0] += 1
+	mov	r8d, 0						; 5th parameter of subtract_first_element_from_second = 0
+	mov	ecx, DWORD -272[rbp]		; 4th parameter of subtract_first_element_from_second = second number lentgh
+	mov	rdx, QWORD -264[rbp]		; 3rd parameter of subtract_first_element_from_second = address(second number[0])
+	mov	rsi, QWORD -224[rbp]		; 2nd parameter of subtract_first_element_from_second = address(first number lentgh)
+	mov	rdi, QWORD -248[rbp]		; 1st parameter of subtract_first_element_from_second = address(first number[0])
+	call	subtract_first_element_from_second
+.check_loop_condition6:
+	mov	eax, DWORD -272[rbp]
+	cdqe
+	add	rax, rax
+	lea	rdx, -2[rax]
+	mov	rax, QWORD -248[rbp]
+	movzx	edx, WORD [rax + rdx]	; edx = first number[second number lentgh - 1]
+	mov	eax, DWORD -272[rbp]
+	cdqe
+	add	rax, rax
+	lea	rcx, -2[rax]
+	mov	rax, QWORD -264[rbp]
+	movzx	eax, WORD [rax + rcx]	; ecx = second number[second number lentgh - 1]
+	cmp	dx, ax
+	jg	.loop_body6
+	movzx	eax, WORD -208[rbp]
+	add	eax, 1
+	mov	WORD -208[rbp], ax			; output number[0] += 1
+	mov	eax, DWORD -272[rbp]
+	sub	eax, 1
+	mov	DWORD -232[rbp], eax		; -232[rbp] = temp number of loop = second number lentgh - 1
+	jmp	.heck_loop_condition7
+.loop_body7_1:
+	mov	eax, DWORD -232[rbp]
+	cdqe
+	lea	rdx, [rax+rax]
+	mov	rax, QWORD -264[rbp]
+	add	rax, rdx
+	movzx	edx, WORD [rax]			; edx = second number[i]
+	mov	eax, DWORD -232[rbp]
+	cdqe
+	lea	rcx, [rax+rax]
+	mov	rax, QWORD -248[rbp]
+	add	rax, rcx
+	movzx	eax, WORD [rax]			; eax = first number[i]
+	cmp	dx, ax
+	jle	.loop_body7_2
+	movzx	eax, WORD -208[rbp]		; -> second number[i] > first number[i]
+	sub	eax, 1
+	mov	WORD -208[rbp], ax			; output number[0] -= 1
+	jmp	.break_loop7
+.loop_body7_2:
+	mov	eax, DWORD -232[rbp]
+	cdqe
+	lea	rdx, [rax+rax]
+	mov	rax, QWORD -248[rbp]
+	add	rax, rdx
+	movzx	edx, WORD [rax]			; edx = first number[i]
+	mov	eax, DWORD -232[rbp]
+	cdqe
+	lea	rcx, [rax+rax]
+	mov	rax, QWORD -264[rbp]
+	add	rax, rcx
+	movzx	eax, WORD [rax]			; eax = second number[i]
+	cmp	dx, ax
+	jg	.break_loop7
+	sub	DWORD -232[rbp], 1			; i--
+.heck_loop_condition7:
+	cmp	DWORD -232[rbp], 0			; compare i , 0
+	jns	.loop_body7_1
+.break_loop7:
+	mov	eax, DWORD -256[rbp]
+	sub eax, DWORD -272[rbp]
+	add	eax, 1
+	mov	DWORD -240[rbp], eax		; eax = first number lentgh - second number lentgh + 1
+	lea	rax, -240[rbp]
+	mov	QWORD -216[rbp], rax		; -216[rbp] = address(output number lentgh)
+	mov	rsi, QWORD -216[rbp]		; 2nd parameter of normalize array = address(output number lentgh)
+	lea	rdi, -208[rbp]				; 1st parameter of normalize array = address(output number[0])
+	call	normalize_array
+	mov	esi, DWORD -240[rbp]		; 2nd parameter of raverse array = address(output number lentgh)
+	lea	rdi, -208[rbp]				; 1st parameter of reverse array = address(output number[0])
+	call	reverse_array
+	mov	eax, DWORD -252[rbp]
+	imul	eax, DWORD -268[rbp]	; eax = first number sign * second number sign
+	mov	edx, eax					; 3rd parameter of print array = output number sign = first number sign * second number sign
+	mov	esi, DWORD -240[rbp]		; 2nd parameter of print array = output number lentgh
 	lea	rdi, -208[rbp]				; 1st parameter of print array = address(output number[0])
 	call	print_array
 	leave
@@ -810,178 +952,4 @@ subtract_first_element_from_second:
 	leave
 	ret
 
-
-divide:
-	push	rbp
-	mov	rbp, rsp
-	sub	rsp, 272
-	mov	QWORD -248[rbp], rdi
-	mov	DWORD -252[rbp], esi
-	mov	DWORD -256[rbp], edx
-	mov	QWORD -264[rbp], rcx
-	mov	DWORD -268[rbp], r8d
-	mov	DWORD -272[rbp], r9d
-	mov	rax, QWORD fs:40
-	mov	QWORD -8[rbp], rax
-	xor	eax, eax
-	mov	DWORD -236[rbp], 0
-	jmp	.L68
-.L69:
-	mov	eax, DWORD -236[rbp]
-	cdqe
-	mov	WORD -208[rbp+rax*2], 0
-	add	DWORD -236[rbp], 1
-.L68:
-	cmp	DWORD -236[rbp], 99
-	jle	.L69
-	lea	rax, -256[rbp]
-	mov	QWORD -224[rbp], rax
-	jmp	.L70
-.L71:
-	mov	eax, DWORD -256[rbp]
-	sub	eax, DWORD -272[rbp]
-	sub	eax, 1
-	cdqe
-	movzx	eax, WORD -208[rbp+rax*2]
-	lea	edx, 1[rax]
-	mov	eax, DWORD -256[rbp]
-	sub	eax, DWORD -272[rbp]
-	sub	eax, 1
-	cdqe
-	mov	WORD -208[rbp+rax*2], dx
-	mov	eax, DWORD -256[rbp]
-	sub	eax, DWORD -272[rbp]
-	lea	edi, -1[rax]
-	mov	ecx, DWORD -272[rbp]
-	mov	rdx, QWORD -264[rbp]
-	mov	rsi, QWORD -224[rbp]
-	mov	rax, QWORD -248[rbp]
-	mov	r8d, edi
-	mov	rdi, rax
-	call	subtract_first_element_from_second
-.L70:
-	mov	eax, DWORD -256[rbp]
-	cmp	DWORD -272[rbp], eax
-	jl	.L71
-	jmp	.L72
-.L73:
-	mov	eax, DWORD -256[rbp]
-	sub	eax, DWORD -272[rbp]
-	cdqe
-	movzx	eax, WORD -208[rbp+rax*2]
-	lea	edx, 1[rax]
-	mov	eax, DWORD -256[rbp]
-	sub	eax, DWORD -272[rbp]
-	cdqe
-	mov	WORD -208[rbp+rax*2], dx
-	mov	ecx, DWORD -272[rbp]
-	mov	rdx, QWORD -264[rbp]
-	mov	rsi, QWORD -224[rbp]
-	mov	rax, QWORD -248[rbp]
-	mov	r8d, 0
-	mov	rdi, rax
-	call	subtract_first_element_from_second
-.L72:
-	mov	eax, DWORD -272[rbp]
-	cdqe
-	add	rax, rax
-	lea	rdx, -2[rax]
-	mov	rax, QWORD -248[rbp]
-	add	rax, rdx
-	movzx	edx, WORD [rax]
-	mov	eax, DWORD -272[rbp]
-	cdqe
-	add	rax, rax
-	lea	rcx, -2[rax]
-	mov	rax, QWORD -264[rbp]
-	add	rax, rcx
-	movzx	eax, WORD [rax]
-	cmp	dx, ax
-	jg	.L73
-	movzx	eax, WORD -208[rbp]
-	add	eax, 1
-	mov	WORD -208[rbp], ax
-	mov	eax, DWORD -272[rbp]
-	sub	eax, 1
-	mov	DWORD -232[rbp], eax
-	jmp	.L74
-.L78:
-	mov	eax, DWORD -232[rbp]
-	cdqe
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -264[rbp]
-	add	rax, rdx
-	movzx	edx, WORD [rax]
-	mov	eax, DWORD -232[rbp]
-	cdqe
-	lea	rcx, [rax+rax]
-	mov	rax, QWORD -248[rbp]
-	add	rax, rcx
-	movzx	eax, WORD [rax]
-	cmp	dx, ax
-	jle	.L75
-	movzx	eax, WORD -208[rbp]
-	sub	eax, 1
-	mov	WORD -208[rbp], ax
-	jmp	.L76
-.L75:
-	mov	eax, DWORD -232[rbp]
-	cdqe
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -248[rbp]
-	add	rax, rdx
-	movzx	edx, WORD [rax]
-	mov	eax, DWORD -232[rbp]
-	cdqe
-	lea	rcx, [rax+rax]
-	mov	rax, QWORD -264[rbp]
-	add	rax, rcx
-	movzx	eax, WORD [rax]
-	cmp	dx, ax
-	jg	.L76
-	sub	DWORD -232[rbp], 1
-.L74:
-	cmp	DWORD -232[rbp], 0
-	jns	.L78
-.L76:
-	mov	DWORD -228[rbp], 100
-	jmp	.L79
-.L82:
-	mov	eax, DWORD -228[rbp]
-	cdqe
-	movzx	eax, WORD -208[rbp+rax*2]
-	test	ax, ax
-	jg	.L81
-	sub	DWORD -228[rbp], 1
-.L79:
-	cmp	DWORD -228[rbp], 0
-	jg	.L82
-.L81:
-	mov	eax, DWORD -228[rbp]
-	add	eax, 1
-	mov	DWORD -240[rbp], eax
-	lea	rax, -240[rbp]
-	mov	QWORD -216[rbp], rax
-	mov	rdx, QWORD -216[rbp]
-	lea	rax, -208[rbp]
-	mov	rsi, rdx
-	mov	rdi, rax
-	call	normalize_array
-	mov	edx, DWORD -240[rbp]
-	lea	rax, -208[rbp]
-	mov	esi, edx
-	mov	rdi, rax
-	call	reverse_array
-	mov	eax, DWORD -252[rbp]
-	imul	eax, DWORD -268[rbp]
-	mov	edx, eax
-	mov	ecx, DWORD -240[rbp]
-	lea	rax, -208[rbp]
-	mov	esi, ecx
-	mov	rdi, rax
-	call	print_array
-	mov	rax, QWORD -8[rbp]
-	sub	rax, QWORD fs:40
-	leave
-	ret
 

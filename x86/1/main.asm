@@ -54,7 +54,6 @@ asm_main:
 .continue_loop_body1:
 	cmp	BYTE -465[rbp], 45			; compare -465[rbp] = operand with '-'
 	jne	.continue_loop_body2		; continue loop body
-.subtract_numbers
 	call	subtract				; subtract numbers and print result
 	jmp	.check_loop_condition		; continue loop
 .continue_loop_body2:
@@ -148,6 +147,100 @@ add:
 	lea	rdi, -416[rbp]				; 1st parameter of print array = address(bigger number[0])
 	call	print_array
 .add_end:
+	leave
+	ret
+
+subtract:
+	push	rbp						;
+	mov	rbp, rsp					; 
+	sub	rsp, 8						; set rsp and rbp
+	neg	r8d							; negate second number sign
+	call	add						; add a + (-b) and print
+	leave
+	ret
+
+multiple:
+	push	rbp
+	mov	rbp, rsp
+	sub	rsp, 272
+	mov	QWORD -248[rbp], rdi		; 1st parameter of function = -248[rbp] = address(first number array[0])
+	mov	DWORD -252[rbp], esi		; 2nd parameter of function = -252[rbp] = first number sign
+	mov	DWORD -256[rbp], edx		; 3rd parameter of function = -256[rbp] = first number lentgh
+	mov	QWORD -264[rbp], rcx		; 4th parameter of function = -264[rbp] = address(second number array[0])
+	mov	DWORD -268[rbp], r8d		; 5th parameter of function = -268[rbp] = second number sign
+	mov	DWORD -272[rbp], r9d		; 6th parameter of function = -272[rbp] = second number lentgh
+	mov	eax, DWORD -272[rbp]
+	add	eax, edx
+	add	eax, 1
+	mov	DWORD -232[rbp], eax		; -232[rbp] = output lentgh = first number lentgh + second number lentgh
+	lea	rax, -232[rbp]
+	mov	QWORD -216[rbp], rax		; -216[rbp] = address(output lentgh)
+	mov	DWORD -228[rbp], 0			; -228[rbp] = loop temp number = i
+	jmp	.check_loop_condition3
+.loop_body3:						; -208[rbp] = address(output number[0])
+	mov	eax, DWORD -228[rbp]		; 
+	cdqe
+	mov	WORD -208[rbp+rax*2], 0		; output number[i] = 0
+	add	DWORD -228[rbp], 1			; i++
+.check_loop_condition3:
+	cmp	DWORD -228[rbp], 99			; compare i , 99
+	jle	.loop_body3
+.next_loop:							; this loop has inner loop
+	mov	DWORD -224[rbp], 0			; -224[rbp] = outer loop temp number = i
+	jmp	.check_outer_loop_condition
+.inner_loop:						; this loop is in the above loop
+	mov	DWORD -220[rbp], 0			; -220[rbp] = inner loop temp number = j
+	jmp	.check_inner_loop_condition
+.inner_loop_body:
+	mov	edx, DWORD -224[rbp]
+	mov	eax, DWORD -220[rbp]
+	add	eax, edx
+	cdqe
+	movzx eax, WORD -208[rbp + rax * 2]	; eax = output[i + j]
+	mov	esi, eax					; esi = output[i + j]
+	mov	eax, DWORD -224[rbp]
+	cdqe
+	lea	rdx, [rax + rax]
+	mov	rax, QWORD -248[rbp]
+	add	rax, rdx
+	movzx	eax, WORD [rax]			; eax = first number[i]
+	mov	ecx, eax					; ecx = first number[i]
+	mov	eax, DWORD -220[rbp]
+	cdqe
+	lea	rdx, [rax + rax]
+	mov	rax, QWORD -264[rbp]
+	add	rax, rdx
+	movzx	eax, WORD [rax]			; eax = second number[i]
+	imul	eax, ecx				; rax = first number[i] * second number[i]
+	lea	ecx, [rsi + rax]
+	mov	edx, DWORD -224[rbp]
+	mov	eax, DWORD -220[rbp]
+	add	eax, edx
+	mov	edx, ecx
+	cdqe
+	mov	WORD -208[rbp+rax*2], dx	; output number[i + j] = first number[i] * second number[i]
+	add	DWORD -220[rbp], 1			; j++
+.check_inner_loop_condition:
+	mov	eax, DWORD -220[rbp]
+	cmp	eax, DWORD -272[rbp]		; compare j , second number lentgh
+	jl	.inner_loop_body
+	add	DWORD -224[rbp], 1			; i++
+.check_outer_loop_condition:
+	mov	eax, DWORD -224[rbp]
+	cmp	eax, DWORD -256[rbp]		; compare i , first number lentgh
+	jl	.inner_loop
+	mov	rsi, QWORD -216[rbp]		; 2nd parameter of normalize array = address(output number lentgh)
+	lea	rdi, -208[rbp]				; 1st parameter of normalize array = address(output number[0])
+	call	normalize_array
+	mov	esi, DWORD -232[rbp]		; 2nd parameter of raverse array = address(output number lentgh)
+	lea	rdi, -208[rbp]				; 1st parameter of reverse array = address(output number[0])
+	call	reverse_array
+	mov	eax, DWORD -252[rbp]
+	imul	eax, DWORD -268[rbp]	; eax = first number sign * second number sign
+	mov	edx, eax					; 3rd parameter of print array = output number sign = first number sign * second number sign
+	mov	esi, DWORD -232[rbp]		; 2nd parameter of print array = output number lentgh
+	lea	rdi, -208[rbp]				; 1st parameter of print array = address(output number[0])
+	call	print_array
 	leave
 	ret
 
@@ -717,127 +810,6 @@ subtract_first_element_from_second:
 	leave
 	ret
 
-subtract:
-	push	rbp
-	mov	rbp, rsp
-	sub	rsp, 32
-	mov	QWORD -8[rbp], rdi
-	mov	DWORD -12[rbp], esi
-	mov	DWORD -16[rbp], edx
-	mov	QWORD -24[rbp], rcx
-	mov	DWORD -28[rbp], r8d
-	mov	DWORD -32[rbp], r9d
-	mov	eax, DWORD -28[rbp]
-	neg	eax
-	mov	r8d, eax
-	mov	edi, DWORD -32[rbp]
-	mov	rcx, QWORD -24[rbp]
-	mov	edx, DWORD -16[rbp]
-	mov	esi, DWORD -12[rbp]
-	mov	rax, QWORD -8[rbp]
-	mov	r9d, edi
-	mov	rdi, rax
-	call	add
-	leave
-	ret
-
-multiple:
-	push	rbp
-	mov	rbp, rsp
-	sub	rsp, 272
-	mov	QWORD -248[rbp], rdi
-	mov	DWORD -252[rbp], esi
-	mov	DWORD -256[rbp], edx
-	mov	QWORD -264[rbp], rcx
-	mov	DWORD -268[rbp], r8d
-	mov	DWORD -272[rbp], r9d
-	mov	rax, QWORD fs:40
-	mov	QWORD -8[rbp], rax
-	xor	eax, eax
-	mov	edx, DWORD -256[rbp]
-	mov	eax, DWORD -272[rbp]
-	add	eax, edx
-	add	eax, 1
-	mov	DWORD -232[rbp], eax
-	lea	rax, -232[rbp]
-	mov	QWORD -216[rbp], rax
-	mov	DWORD -228[rbp], 0
-	jmp	.L60
-.L61:
-	mov	eax, DWORD -228[rbp]
-	cdqe
-	mov	WORD -208[rbp+rax*2], 0
-	add	DWORD -228[rbp], 1
-.L60:
-	cmp	DWORD -228[rbp], 99
-	jle	.L61
-	mov	DWORD -224[rbp], 0
-	jmp	.L62
-.L65:
-	mov	DWORD -220[rbp], 0
-	jmp	.L63
-.L64:
-	mov	edx, DWORD -224[rbp]
-	mov	eax, DWORD -220[rbp]
-	add	eax, edx
-	cdqe
-	movzx	eax, WORD -208[rbp+rax*2]
-	mov	esi, eax
-	mov	eax, DWORD -224[rbp]
-	cdqe
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -248[rbp]
-	add	rax, rdx
-	movzx	eax, WORD [rax]
-	mov	ecx, eax
-	mov	eax, DWORD -220[rbp]
-	cdqe
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -264[rbp]
-	add	rax, rdx
-	movzx	eax, WORD [rax]
-	imul	eax, ecx
-	lea	ecx, [rsi+rax]
-	mov	edx, DWORD -224[rbp]
-	mov	eax, DWORD -220[rbp]
-	add	eax, edx
-	mov	edx, ecx
-	cdqe
-	mov	WORD -208[rbp+rax*2], dx
-	add	DWORD -220[rbp], 1
-.L63:
-	mov	eax, DWORD -220[rbp]
-	cmp	eax, DWORD -272[rbp]
-	jl	.L64
-	add	DWORD -224[rbp], 1
-.L62:
-	mov	eax, DWORD -224[rbp]
-	cmp	eax, DWORD -256[rbp]
-	jl	.L65
-	mov	rdx, QWORD -216[rbp]
-	lea	rax, -208[rbp]
-	mov	rsi, rdx
-	mov	rdi, rax
-	call	normalize_array
-	mov	edx, DWORD -232[rbp]
-	lea	rax, -208[rbp]
-	mov	esi, edx
-	mov	rdi, rax
-	call	reverse_array
-	mov	eax, DWORD -252[rbp]
-	imul	eax, DWORD -268[rbp]
-	mov	edx, eax
-	mov	ecx, DWORD -232[rbp]
-	lea	rax, -208[rbp]
-	mov	esi, ecx
-	mov	rdi, rax
-	call	print_array
-	mov	rax, QWORD -8[rbp]
-	sub	rax, QWORD fs:40
-	je	.L66
-.L66:
-	leave
-	ret
 
 divide:
 	push	rbp

@@ -677,127 +677,29 @@ normalize_array:
 	pop	rbp
 	ret
 
-first_input_is_bigger:
-	push	rbp
-	mov	rbp, rsp
-	mov	QWORD -24[rbp], rdi
-	mov	DWORD -28[rbp], esi
-	mov	DWORD -32[rbp], edx
-	mov	QWORD -40[rbp], rcx
-	mov	DWORD -44[rbp], r8d
-	mov	DWORD -48[rbp], r9d
-	mov	rax, QWORD 32[rbp]
-	mov	edx, DWORD -32[rbp]
-	mov	DWORD [rax], edx
-	mov	rax, QWORD 24[rbp]
-	mov	edx, DWORD -28[rbp]
-	mov	DWORD [rax], edx
-	mov	rax, QWORD 56[rbp]
-	mov	edx, DWORD -48[rbp]
-	mov	DWORD [rax], edx
-	mov	rax, QWORD 48[rbp]
-	mov	edx, DWORD -44[rbp]
-	mov	DWORD [rax], edx
-	mov	DWORD -8[rbp], 0
-	jmp	.L18
-.L19:
-	mov	eax, DWORD -8[rbp]
-	cdqe
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -24[rbp]
-	add	rax, rdx
-	mov	edx, DWORD -8[rbp]
-	movsx	rdx, edx
-	lea	rcx, [rdx+rdx]
-	mov	rdx, QWORD 16[rbp]
-	add	rdx, rcx
-	movzx	eax, WORD [rax]
-	mov	WORD [rdx], ax
-	add	DWORD -8[rbp], 1
-.L18:
-	mov	eax, DWORD -8[rbp]
-	cmp	eax, DWORD -32[rbp]
-	jl	.L19
-	mov	DWORD -4[rbp], 0
-	jmp	.L20
-.L21:
-	mov	eax, DWORD -4[rbp]
-	cdqe
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -40[rbp]
-	add	rax, rdx
-	mov	edx, DWORD -4[rbp]
-	movsx	rdx, edx
-	lea	rcx, [rdx+rdx]
-	mov	rdx, QWORD 40[rbp]
-	add	rdx, rcx
-	movzx	eax, WORD [rax]
-	mov	WORD [rdx], ax
-	add	DWORD -4[rbp], 1
-.L20:
-	mov	eax, DWORD -4[rbp]
-	cmp	eax, DWORD -48[rbp]
-	jl	.L21
-	pop	rbp
-	ret
-
 set_small_and_big_number:
 	push	rbp
 	mov	rbp, rsp
-	sub	rsp, 48
-	mov	QWORD -24[rbp], rdi
-	mov	DWORD -28[rbp], esi
-	mov	DWORD -32[rbp], edx
-	mov	QWORD -40[rbp], rcx
-	mov	DWORD -44[rbp], r8d
-	mov	DWORD -48[rbp], r9d
+	sub	rsp, 48						; set rsp and rbp
+	mov	QWORD -24[rbp], rdi			; -24[rbp] = address(first number array[0])
+	mov	DWORD -28[rbp], esi			; -28[rbp] = first number sign
+	mov	DWORD -32[rbp], edx			; -32[rbp] = first number lentgh
+	mov	QWORD -40[rbp], rcx			; -40[rbp] = address(second number array[0])
+	mov	DWORD -44[rbp], r8d			; -44[rbp] = second number sign
+	mov	DWORD -48[rbp], r9d			; -48[rbp] = second number lentgh
 	mov	eax, DWORD -32[rbp]
-	cmp	eax, DWORD -48[rbp]
-	jle	.L24
-	mov	r8d, DWORD -48[rbp]
-	mov	edi, DWORD -44[rbp]
-	mov	rcx, QWORD -40[rbp]
-	mov	edx, DWORD -32[rbp]
-	mov	esi, DWORD -28[rbp]
-	mov	rax, QWORD -24[rbp]
-	push	QWORD 56[rbp]
-	push	QWORD 48[rbp]
-	push	QWORD 40[rbp]
-	push	QWORD 32[rbp]
-	push	QWORD 24[rbp]
-	push	QWORD 16[rbp]
-	mov	r9d, r8d
-	mov	r8d, edi
-	mov	rdi, rax
-	call	first_input_is_bigger
-	add	rsp, 48
-	jmp	.L23
-.L24:
+	cmp	eax, DWORD -48[rbp]			; compare lentgh of numbers
+	jle	.check_second_is_bigger
+	jmp .first_is_bigger_end
+.check_second_is_bigger:
 	mov	eax, DWORD -48[rbp]
 	cmp	eax, DWORD -32[rbp]
-	jle	.L26
-	mov	r8d, DWORD -32[rbp]
-	mov	edi, DWORD -28[rbp]
-	mov	rcx, QWORD -24[rbp]
-	mov	edx, DWORD -48[rbp]
-	mov	esi, DWORD -44[rbp]
-	mov	rax, QWORD -40[rbp]
-	push	QWORD 56[rbp]
-	push	QWORD 48[rbp]
-	push	QWORD 40[rbp]
-	push	QWORD 32[rbp]
-	push	QWORD 24[rbp]
-	push	QWORD 16[rbp]
-	mov	r9d, r8d
-	mov	r8d, edi
-	mov	rdi, rax
-	call	first_input_is_bigger
-	add	rsp, 48
-	jmp	.L23
-.L26:
-	mov	DWORD -4[rbp], 0
-	jmp	.L27
-.L30:
+	jle	.loop_begin
+	jmp .second_is_bigger_end
+.loop_begin:						; in this place first number lentgh = second number lentgh
+	mov	DWORD -4[rbp], 0			; -4[rbp] = loop temp number = i
+	jmp	.check_loop_condition11
+.loop_body11_1:
 	mov	eax, DWORD -32[rbp]
 	sub	eax, DWORD -4[rbp]
 	cdqe
@@ -805,7 +707,7 @@ set_small_and_big_number:
 	lea	rdx, -2[rax]
 	mov	rax, QWORD -24[rbp]
 	add	rax, rdx
-	movzx	edx, WORD [rax]
+	movzx	edx, WORD [rax]			; edx = first number[first number lentgh - i - 1]
 	mov	eax, DWORD -32[rbp]
 	sub	eax, DWORD -4[rbp]
 	cdqe
@@ -813,28 +715,11 @@ set_small_and_big_number:
 	lea	rcx, -2[rax]
 	mov	rax, QWORD -40[rbp]
 	add	rax, rcx
-	movzx	eax, WORD [rax]
+	movzx	eax, WORD [rax]			; eax = second number[first number lentgh - i - 1]
 	cmp	dx, ax
-	jle	.L28
-	mov	r8d, DWORD -48[rbp]
-	mov	edi, DWORD -44[rbp]
-	mov	rcx, QWORD -40[rbp]
-	mov	edx, DWORD -32[rbp]
-	mov	esi, DWORD -28[rbp]
-	mov	rax, QWORD -24[rbp]
-	push	QWORD 56[rbp]
-	push	QWORD 48[rbp]
-	push	QWORD 40[rbp]
-	push	QWORD 32[rbp]
-	push	QWORD 24[rbp]
-	push	QWORD 16[rbp]
-	mov	r9d, r8d
-	mov	r8d, edi
-	mov	rdi, rax
-	call	first_input_is_bigger
-	add	rsp, 48
-	jmp	.L23
-.L28:
+	jle	.loop_body11_2
+	jmp .first_is_bigger_end
+.loop_body11_2:
 	mov	eax, DWORD -32[rbp]
 	sub	eax, DWORD -4[rbp]
 	cdqe
@@ -842,7 +727,7 @@ set_small_and_big_number:
 	lea	rdx, -2[rax]
 	mov	rax, QWORD -24[rbp]
 	add	rax, rdx
-	movzx	edx, WORD [rax]
+	movzx	edx, WORD [rax]			; edx = first number[first number lentgh - i - 1]
 	mov	eax, DWORD -32[rbp]
 	sub	eax, DWORD -4[rbp]
 	cdqe
@@ -850,67 +735,121 @@ set_small_and_big_number:
 	lea	rcx, -2[rax]
 	mov	rax, QWORD -40[rbp]
 	add	rax, rcx
-	movzx	eax, WORD [rax]
+	movzx	eax, WORD [rax]			; eax = second number[first number lentgh - i - 1]
 	cmp	dx, ax
-	jge	.L29
-	mov	r8d, DWORD -32[rbp]
-	mov	edi, DWORD -28[rbp]
-	mov	rcx, QWORD -24[rbp]
-	mov	edx, DWORD -48[rbp]
-	mov	esi, DWORD -44[rbp]
-	mov	rax, QWORD -40[rbp]
-	push	QWORD 56[rbp]
-	push	QWORD 48[rbp]
-	push	QWORD 40[rbp]
-	push	QWORD 32[rbp]
-	push	QWORD 24[rbp]
-	push	QWORD 16[rbp]
-	mov	r9d, r8d
-	mov	r8d, edi
-	mov	rdi, rax
-	call	first_input_is_bigger
-	add	rsp, 48
-	jmp	.L23
-.L29:
+	jge	.continue_loop11
+	jmp .second_is_bigger_end
+.continue_loop11:
 	add	DWORD -4[rbp], 1
-.L27:
+.check_loop_condition11:
 	mov	eax, DWORD -4[rbp]
-	cmp	eax, DWORD -32[rbp]
-	jl	.L30
-	mov	r8d, DWORD -32[rbp]
-	mov	edi, DWORD -28[rbp]
-	mov	rcx, QWORD -24[rbp]
-	mov	edx, DWORD -48[rbp]
-	mov	esi, DWORD -44[rbp]
-	mov	rax, QWORD -40[rbp]
-	push	QWORD 56[rbp]
-	push	QWORD 48[rbp]
-	push	QWORD 40[rbp]
-	push	QWORD 32[rbp]
-	push	QWORD 24[rbp]
-	push	QWORD 16[rbp]
-	mov	r9d, r8d
-	mov	r8d, edi
-	mov	rdi, rax
+	cmp	eax, DWORD -32[rbp]			; compare i and first number lentgh
+	jl	.loop_body11_1
+	jmp .second_is_bigger_end
+.first_is_bigger_end:
+	mov	rdi, QWORD -24[rbp]			; 1st parameter of first_input_is_bigger = -24[rbp] = address(first number array[0])
+	mov	esi, DWORD -28[rbp]			; 2nd parameter of first_input_is_bigger = -28[rbp] = first number sign
+	mov	edx, DWORD -32[rbp]			; 3rd parameter of first_input_is_bigger = -32[rbp] = first number lentgh
+	mov	rcx, QWORD -40[rbp]			; 4th parameter of first_input_is_bigger = -40[rbp] = address(second number array[0])
+	mov	r8d, DWORD -44[rbp]			; 5th parameter of first_input_is_bigger = -44[rbp] = second number sign
+	mov	r9d, DWORD -48[rbp]			; 6th parameter of first_input_is_bigger = -48[rbp] = second number lentgh
+	jmp	.func_end
+.second_is_bigger_end:
+	mov	rdi, QWORD -40[rbp]			; 1st parameter of first_input_is_bigger = -40[rbp] = address(second number array[0])
+	mov	esi, DWORD -44[rbp]			; 2nd parameter of first_input_is_bigger = -44[rbp] = second number sign
+	mov	edx, DWORD -48[rbp]			; 3rd parameter of first_input_is_bigger = -48[rbp] = second number lentgh
+	mov	rcx, QWORD -24[rbp]			; 4th parameter of first_input_is_bigger = -24[rbp] = address(first number array[0])
+	mov	r8d, DWORD -28[rbp]			; 5th parameter of first_input_is_bigger = -28[rbp] = first number sign
+	mov	r9d, DWORD -32[rbp]			; 6th parameter of first_input_is_bigger = -32[rbp] = first number lentgh
+.func_end:
+	push	QWORD 56[rbp]			; 7th parameter of first_input_is_bigger = 56[rbp] = address(smaller number lentgh)
+	push	QWORD 48[rbp]			; 8th parameter of first_input_is_bigger = 48[rbp] = address(smaller number sign)
+	push	QWORD 40[rbp]			; 9th parameter of first_input_is_bigger = 40[rbp] = address(smaller number[0])
+	push	QWORD 32[rbp]			; 10th parameter of first_input_is_bigger = 32[rbp] = address(bigger number lentgh)
+	push	QWORD 24[rbp]			; 11th parameter of first_input_is_bigger = 24[rbp] = address(bigger number sign)
+	push	QWORD 16[rbp]			; 12th parameter of first_input_is_bigger = 16[rbp] = address(bigger number[0])
 	call	first_input_is_bigger
 	add	rsp, 48
-.L23:
 	leave
 	ret
 
+
+first_input_is_bigger:
+	push	rbp
+	mov	rbp, rsp
+	mov	QWORD -24[rbp], rdi			; -24[rbp] = address(first number array[0])
+	mov	DWORD -28[rbp], esi			; -28[rbp] = first number sign
+	mov	DWORD -32[rbp], edx			; -32[rbp] = first number lentgh
+	mov	QWORD -40[rbp], rcx			; -40[rbp] = address(second number array[0])
+	mov	DWORD -44[rbp], r8d			; -44[rbp] = second number sign
+	mov	DWORD -48[rbp], r9d			; -48[rbp] = second number lentgh
+	mov	rax, QWORD 32[rbp]			; rax = address(bigger number lentgh)
+	mov	edx, DWORD -32[rbp]			; edx = first number lentgh
+	mov	DWORD [rax], edx			; [rax] = bigger number lentgh = first number lentgh
+	mov	rax, QWORD 24[rbp]			; rax = address(bigger number sign)
+	mov	edx, DWORD -28[rbp]
+	mov	DWORD [rax], edx			; [rax] = bigger number sign = first number sign
+	mov	rax, QWORD 56[rbp]
+	mov	edx, DWORD -48[rbp]
+	mov	DWORD [rax], edx			; [rax] = smaller number lentgh = second number lentgh
+	mov	rax, QWORD 48[rbp]
+	mov	edx, DWORD -44[rbp]
+	mov	DWORD [rax], edx			; [rax] = smaller number sign = second number sign
+	mov	DWORD -8[rbp], 0			; -8[rbp] = loop temp number = i 
+	jmp	.initialize_big_number_loop
+.initialize_big_number_i:
+	mov	eax, DWORD -8[rbp]
+	cdqe
+	lea	rdx, [rax+rax]
+	mov	rax, QWORD -24[rbp]
+	add	rax, rdx
+	mov	edx, DWORD -8[rbp]			; eax = address(first number[i])
+	movsx	rdx, edx
+	lea	rcx, [rdx+rdx]
+	mov	rdx, QWORD 16[rbp]
+	add	rdx, rcx					; rdx = address(bigger number[i])
+	movzx	eax, WORD [rax]
+	mov	WORD [rdx], ax				; [rdx] = bigger number[i] = first number[i]
+	add	DWORD -8[rbp], 1			; i++
+.initialize_big_number_loop:
+	mov	eax, DWORD -8[rbp]
+	cmp	eax, DWORD -32[rbp]			; compare i and first number lentgh
+	jl	.initialize_big_number_i
+	mov	DWORD -4[rbp], 0			; -4[rbp] = loop temp number = i
+	jmp	.initialize_small_number_loop
+.initialize_small_number_i:
+	mov	eax, DWORD -4[rbp]
+	cdqe
+	lea	rdx, [rax+rax]
+	mov	rax, QWORD -40[rbp]
+	add	rax, rdx
+	mov	edx, DWORD -4[rbp]			; eax = address(second number[i])
+	movsx	rdx, edx
+	lea	rcx, [rdx+rdx]
+	mov	rdx, QWORD 40[rbp]			
+	add	rdx, rcx					; rdx = address(smaller number[i])
+	movzx	eax, WORD [rax]
+	mov	WORD [rdx], ax				; [rdx] = smaller number[i] = second number[i]
+	add	DWORD -4[rbp], 1			; i++
+.initialize_small_number_loop:
+	mov	eax, DWORD -4[rbp]
+	cmp	eax, DWORD -48[rbp]			; compare i and second number lentgh
+	jl	.initialize_small_number_i
+	pop	rbp
+	ret
 
 subtract_first_element_from_second:
 	push	rbp
 	mov	rbp, rsp
 	sub	rsp, 48
-	mov	QWORD -24[rbp], rdi
-	mov	QWORD -32[rbp], rsi
-	mov	QWORD -40[rbp], rdx
-	mov	DWORD -44[rbp], ecx
-	mov	DWORD -48[rbp], r8d
-	mov	DWORD -4[rbp], 0
-	jmp	.L47
-.L48:
+	mov	QWORD -24[rbp], rdi			; -24[rbp] = address(bigger number[0])
+	mov	QWORD -32[rbp], rsi			; -32[rbp] = address(bigger number lentgh)
+	mov	QWORD -40[rbp], rdx			; -40[rbp] = address(smaller number[0])
+	mov	DWORD -44[rbp], ecx			; -44[rbp] = smaller number lentgh
+	mov	DWORD -48[rbp], r8d			; -48[rbp] = from
+	mov	DWORD -4[rbp], 0			; -4[rbp] = loop temp number = i
+	jmp	.check_loop_condition12
+.loop_body12:
 	mov	edx, DWORD -4[rbp]
 	mov	eax, DWORD -48[rbp]
 	add	eax, edx
@@ -918,14 +857,14 @@ subtract_first_element_from_second:
 	lea	rdx, [rax+rax]
 	mov	rax, QWORD -24[rbp]
 	add	rax, rdx
-	movzx	eax, WORD [rax]
-	mov	ecx, eax
+	movzx	eax, WORD [rax]			; eax = bigger number[i + from]
+	mov	ecx, eax					; ecx = bigger number[i + from]
 	mov	eax, DWORD -4[rbp]
 	cdqe
 	lea	rdx, [rax+rax]
 	mov	rax, QWORD -40[rbp]
 	add	rax, rdx
-	movzx	eax, WORD [rax]
+	movzx	eax, WORD [rax]			; eax = smaller number[i]
 	sub	ecx, eax
 	mov	edx, DWORD -4[rbp]
 	mov	eax, DWORD -48[rbp]
@@ -935,16 +874,14 @@ subtract_first_element_from_second:
 	mov	rax, QWORD -24[rbp]
 	add	rax, rdx
 	mov	edx, ecx
-	mov	WORD [rax], dx
-	add	DWORD -4[rbp], 1
-.L47:
+	mov	WORD [rax], dx				; bigger number[i + from] -= smaller number[i]
+	add	DWORD -4[rbp], 1			; i++
+.check_loop_condition12:
 	mov	eax, DWORD -4[rbp]
-	cmp	eax, DWORD -44[rbp]
-	jl	.L48
-	mov	rdx, QWORD -32[rbp]
-	mov	rax, QWORD -24[rbp]
-	mov	rsi, rdx
-	mov	rdi, rax
+	cmp	eax, DWORD -44[rbp]			; compare i and smaler number lentgh
+	jl	.loop_body12
+	mov	rsi, QWORD -32[rbp]			; 2nd parameter of normalize array = address(bigger number lentgh)		
+	mov	rdi, QWORD -24[rbp]			; 1st parameter of normalize array = address(bigger number[0])
 	call	normalize_array
 	leave
 	ret

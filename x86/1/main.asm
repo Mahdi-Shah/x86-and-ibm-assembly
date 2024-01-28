@@ -416,7 +416,6 @@ print_array:
 	mov	rax, QWORD -24[rbp]
 	add	rax, rdx
 	movzx	eax, WORD [rax]			; eax = output[i]
-	cwde
 	mov	esi, eax
 	lea	rax, string
 	mov	rdi, rax

@@ -247,13 +247,14 @@ multiple:
 divide:
 	push	rbp
 	mov	rbp, rsp
-	sub	rsp, 272					; set rsp and rbp
+	sub	rsp, 276					; set rsp and rbp
 	mov	QWORD -248[rbp], rdi		; 1st parameter of function = -248[rbp] = address(first number array[0])
 	mov	DWORD -252[rbp], esi		; 2nd parameter of function = -252[rbp] = first number sign
 	mov	DWORD -256[rbp], edx		; 3rd parameter of function = -256[rbp] = first number lentgh
 	mov	QWORD -264[rbp], rcx		; 4th parameter of function = -264[rbp] = address(second number array[0])
 	mov	DWORD -268[rbp], r8d		; 5th parameter of function = -268[rbp] = second number sign
 	mov	DWORD -272[rbp], r9d		; 6th parameter of function = -272[rbp] = second number lentgh
+	mov DWORD -276[rbp], edx		; copy of first number lentgh
 	mov	DWORD -236[rbp], 0			; loop temp number = i
 	jmp	.check_loop_condition4
 .loop_body4:
@@ -365,7 +366,7 @@ divide:
 	cmp	DWORD -232[rbp], 0			; compare i , 0
 	jns	.loop_body7_1
 .break_loop7:
-	mov	eax, DWORD -256[rbp]
+	mov	eax, DWORD -276[rbp]
 	sub eax, DWORD -272[rbp]
 	add	eax, 1
 	mov	DWORD -240[rbp], eax		; eax = first number lentgh - second number lentgh + 1
@@ -432,22 +433,22 @@ print_array:
 	ret
 
 reverse_array:
-	push	rbp
-	mov	rbp, rsp
-	mov	QWORD -24[rbp], rdi
-	mov	DWORD -28[rbp], esi
-	mov	DWORD -4[rbp], 0
-	jmp	.L7
-.L8:
+	push	rbp						;
+	mov	rbp, rsp					; set rbp and rsp
+	mov	QWORD -24[rbp], rdi			; -24[rbp] = address(input[0])
+	mov	DWORD -28[rbp], esi			; -28[rbp] = input number lentgh
+	mov	DWORD -4[rbp], 0			; -4[rbp] = loop temp number = i
+	jmp	.check_loop_condition8
+.loop_body8:
 	mov	eax, DWORD -4[rbp]
 	cdqe
 	lea	rdx, [rax+rax]
 	mov	rax, QWORD -24[rbp]
 	add	rax, rdx
-	movzx	eax, WORD [rax]
-	mov	WORD -6[rbp], ax
+	movzx	eax, WORD [rax]			; eax = input[i]
+	mov	WORD -6[rbp], ax			; -6[rbp] = input[i]
 	mov	eax, DWORD -28[rbp]
-	sub	eax, DWORD -4[rbp]
+	sub	eax, DWORD -4[rbp]			; eax = lentgh - i
 	cdqe
 	add	rax, rax
 	lea	rdx, -2[rax]
@@ -458,8 +459,8 @@ reverse_array:
 	lea	rcx, [rdx+rdx]
 	mov	rdx, QWORD -24[rbp]
 	add	rdx, rcx
-	movzx	eax, WORD [rax]
-	mov	WORD [rdx], ax
+	movzx	eax, WORD [rax]			; eax = input[lentgh - i - 1]
+	mov	WORD [rdx], ax				; [rdx] = input[i] = input[lentgh - i - 1]
 	mov	eax, DWORD -28[rbp]
 	sub	eax, DWORD -4[rbp]
 	cdqe
@@ -468,16 +469,13 @@ reverse_array:
 	mov	rax, QWORD -24[rbp]
 	add	rdx, rax
 	movzx	eax, WORD -6[rbp]
-	mov	WORD [rdx], ax
-	add	DWORD -4[rbp], 1
-.L7:
+	mov	WORD [rdx], ax				; [rdx] = input[lentgh - i - 1] = -6[rbp] = input[i]
+	add	DWORD -4[rbp], 1			; i++
+.check_loop_condition8:
 	mov	eax, DWORD -28[rbp]
-	mov	edx, eax
-	shr	edx, 31
-	add	eax, edx
-	sar	eax, 1
-	cmp	DWORD -4[rbp], eax
-	jl	.L8
+	sar	eax, 1						; eax = lentgh / 2
+	cmp	DWORD -4[rbp], eax			; compare i , lentgh / 2
+	jl	.loop_body8
 	pop	rbp
 	ret
 

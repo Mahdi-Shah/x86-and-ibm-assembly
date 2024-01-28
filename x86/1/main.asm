@@ -387,47 +387,47 @@ divide:
 	ret
 
 print_array:
-	push	rbp
-	mov	rbp, rsp
-	sub	rsp, 32
-	mov	QWORD -24[rbp], rdi
-	mov	DWORD -28[rbp], esi
-	mov	DWORD -32[rbp], edx
-	cmp	DWORD -28[rbp], 1
-	jne	.L2
+	push	rbp						;
+	mov	rbp, rsp					;
+	sub	rsp, 32						; set rsp and rbp
+	mov	QWORD -24[rbp], rdi			; -24[rbp] = address(output[0])
+	mov	DWORD -28[rbp], esi			; -28[rbp] = output number lentgh
+	mov	DWORD -32[rbp], edx			; -32[rbp] = output number sign
+	cmp	DWORD -28[rbp], 1			; compare sign and 1
+	jne	.check_if_negative_print_negative
 	mov	rax, QWORD -24[rbp]
-	movzx	eax, WORD [rax]
-	test	ax, ax
-	jne	.L2
-	mov	DWORD -32[rbp], 1
-.L2:
+	movzx	eax, WORD [rax]			; eax = output[0]
+	cmp	ax, 0
+	jne	.check_if_negative_print_negative
+	mov	DWORD -32[rbp], 1			; lentgh = 1 and output[0] = 0 -> sign = 1. prevent print '-0'
+.check_if_negative_print_negative:
 	cmp	DWORD -32[rbp], -1
-	jne	.L3
-	mov	edi, 45
+	jne	.print_loop
+	mov	edi, 45						; sign == -1 -> print(-)
 	call	putchar
-.L3:
-	mov	DWORD -4[rbp], 0
-	jmp	.L4
-.L5:
+.print_loop:
+	mov	DWORD -4[rbp], 0			; -4[rbp] = loop temp number  = i
+	jmp	.check_print_loop_condition
+.print_loop_body:
 	mov	eax, DWORD -4[rbp]
 	cdqe
 	lea	rdx, [rax+rax]
 	mov	rax, QWORD -24[rbp]
 	add	rax, rdx
-	movzx	eax, WORD [rax]
+	movzx	eax, WORD [rax]			; eax = output[i]
 	cwde
 	mov	esi, eax
 	lea	rax, string
 	mov	rdi, rax
 	mov	eax, 0
-	call	printf
-	add	DWORD -4[rbp], 1
-.L4:
+	call	printf					; print output[i]
+	add	DWORD -4[rbp], 1			; i++
+.check_print_loop_condition:
 	mov	eax, DWORD -4[rbp]
-	cmp	eax, DWORD -28[rbp]
-	jl	.L5
+	cmp	eax, DWORD -28[rbp]			; compare i and lentgh
+	jl	.print_loop_body
 	mov	edi, 10
-	call	putchar
+	call	putchar					; print new line
 	leave
 	ret
 

@@ -23,13 +23,13 @@ asm_main:
 .loop_body:
 	mov	DWORD -464[rbp], 1			; -464[rbp] = first number sign = 1
 	mov	DWORD -456[rbp], 1			; -456[rbp] = second number sign  = 1
-	lea	rax, -464[rbp]				; rax = -464[rbp] = address(first number sign)
+	lea	rax, -464[rbp]				; rax = address(-464[rbp]) = address(first number sign)
 	mov	QWORD -448[rbp], rax		; -448[rbp] = rax =  address(first number sign)
-	lea	rax, -460[rbp]				; rax = -460[rbp] = address(first number lentgh)
+	lea	rax, -460[rbp]				; rax = address(-460[rbp]) = address(first number lentgh)
 	mov	QWORD -440[rbp], rax		; -440[rbp] = rax =  address(first number lentgh)
-	lea	rax, -456[rbp]				; rax = -456[rbp] = address(second number sign)
+	lea	rax, -456[rbp]				; rax = address(-456[rbp]) = address(second number sign)
 	mov	QWORD -432[rbp], rax		; -432[rbp] = rax =  address(second number sign)
-	lea	rax, -452[rbp]				; rax = -452[rbp] = address(second number lentgh)
+	lea	rax, -452[rbp]				; rax = address(-452[rbp]) = address(second number lentgh)
 	mov	QWORD -424[rbp], rax		; -424[rbp] = rax =  address(second number lentgh)
 	call	getchar					; get blank line bitween operand and numbers
 	mov	rdx, QWORD -440[rbp]		; 3rd parameter of get_number = address(first number lentgh)				
@@ -40,170 +40,114 @@ asm_main:
 	mov	rsi, QWORD -432[rbp]		; 2nd parameter of get_number = address(second number sign)
 	lea	rdi, -208[rbp]				; 1st parameter of get_number = address(second number array[0]) = -208[rbp]
 	call	get_number				; initialize first number; first number[i] = [-208[rbp] + 2 * i]
+	mov	r9, QWORD -452[rbp]			; 6th parameter of function = second number lentgh
+	mov	r8, QWORD -456[rbp]			; 5th parameter of function = second number sign
+	lea	rcx, -208[rbp]				; 4th parameter of function = address(second number array[0])
+	mov	rdx, QWORD -460[rbp]		; 3rd parameter of function = first number lentgh
+	mov	rsi, QWORD -464[rbp]		; 2nd parameter of function = first number sign
+	lea	rdi, -416[rbp]				; 1st parameter of function = address(first number array[0])
 	cmp	BYTE -465[rbp], 43			; compare -465[rbp] = operand with '+'
 	jne	.continue_loop_body1						
 .add_numbers:
-	mov	r9, QWORD -452[rbp]			; 6th parameter of add = address(second number lentgh)
-	mov	r8, QWORD -456[rbp]			; 5th parameter of add = address(second number sign)
-	lea	rcx, -208[rbp]				; 4th parameter of add = address(second number array[0])
-	mov	rdx, QWORD -460[rbp]		; 3rd parameter of add = address(first number lentgh)
-	mov	rsi, QWORD -464[rbp]		; 2nd parameter of add = address(first number sign)
-	lea	rdi, -416[rbp]				; 1st parameter of add = address(first number array[0])
 	call	add						; add numbers and print result
 	jmp	.check_loop_condition		; continue loop
 .continue_loop_body1:
 	cmp	BYTE -465[rbp], 45			; compare -465[rbp] = operand with '-'
 	jne	.continue_loop_body2		; continue loop body
-	mov	r9, QWORD -452[rbp]			; 6th parameter of subtract = address(second number lentgh)
-	mov	r8, QWORD -456[rbp]			; 5th parameter of subtract = address(second number sign)
-	lea	rcx, -208[rbp]				; 4th parameter of subtract = address(second number array[0])
-	mov	rdx, QWORD -460[rbp]		; 3rd parameter of subtract = address(first number lentgh)
-	mov	rsi, QWORD -464[rbp]		; 2nd parameter of subtract = address(first number sign)
-	lea	rdi, -416[rbp]				; 1st parameter of subtract = address(first number array[0])
+.subtract_numbers
 	call	subtract				; subtract numbers and print result
 	jmp	.check_loop_condition		; continue loop
 .continue_loop_body2:
 	cmp	BYTE -465[rbp], 120			; compare -465[rbp] = operand with 'x'
 	jne	.continue_loop_body3		; continue loop body
-	mov	r9, QWORD -452[rbp]			; 6th parameter of multiple = address(second number lentgh)
-	mov	r8, QWORD -456[rbp]			; 5th parameter of multiple = address(second number sign)
-	lea	rcx, -208[rbp]				; 4th parameter of multiple = address(second number array[0])
-	mov	rdx, QWORD -460[rbp]		; 3rd parameter of multiple = address(first number lentgh)
-	mov	rsi, QWORD -464[rbp]		; 2nd parameter of multiple = address(first number sign)
-	lea	rdi, -416[rbp]				; 1st parameter of multiple = address(first number array[0])
+.mutiple_numbers:
 	call	multiple				; multiple numbers and print result
 	jmp	.check_loop_condition		; continue loop
 .continue_loop_body3:
 	cmp	BYTE -465[rbp], 47			; compare -465[rbp] = operand with '/'
 	jne	.check_loop_condition		; character was'nt equal to any operand. back to loop condition
-	mov	r9, QWORD -452[rbp]			; 6th parameter of divide = address(second number lentgh)
-	mov	r8, QWORD -456[rbp]			; 5th parameter of divide = address(second number sign)
-	lea	rcx, -208[rbp]				; 4th parameter of divide = address(second number array[0])
-	mov	rdx, QWORD -460[rbp]		; 3rd parameter of divide = address(first number lentgh)
-	mov	rsi, QWORD -464[rbp]		; 2nd parameter of divide = address(first number sign)
-	lea	rdi, -416[rbp]				; 1st parameter of divide = address(first number array[0])
+.divide_numbers:
 	call	divide					; divide numbers and print result
 	jmp	.check_loop_condition		; continue loop
 
 
 add:
+									; print add of two number
 	push	rbp						;
 	mov	rbp, rsp					;
 	sub	rsp, 736					; set rbp and rsp
-	mov	QWORD -712[rbp], rdi		; store rdi = address(first number array[0]) in -712[rbp]
-	mov	DWORD -716[rbp], esi		; store esi = rsi = address(first number sign) in -716[rbp]
-	mov	DWORD -720[rbp], edx		; store edx = rdx = address(first number lentgh) in -720[rbp]
-	mov	QWORD -728[rbp], rcx		; store rcx = address(second number array[0]) in -728[rbp]
-	mov	DWORD -732[rbp], r8d		; store r8d = r8 = address(second number sign) in -732[rbp]
-	mov	DWORD -736[rbp], r9d		; store r9d = r9 = address(second number lentgh) in -736[rbp]
-	lea	rax, -688[rbp]
-	mov	QWORD -664[rbp], rax
-	lea	rax, -680[rbp]
-	mov	QWORD -656[rbp], rax
-	lea	rax, -684[rbp]
-	mov	QWORD -648[rbp], rax
-	lea	rax, -676[rbp]
-	mov	QWORD -640[rbp], rax
-	mov	r9d, DWORD -736[rbp]
-	mov	r8d, DWORD -732[rbp]
-	mov	rcx, QWORD -728[rbp]
-	mov	edx, DWORD -720[rbp]
-	mov	esi, DWORD -716[rbp]
-	mov	rax, QWORD -712[rbp]
-	push	QWORD -656[rbp]
-	push	QWORD -640[rbp]
-	lea	rdi, -208[rbp]
-	push	rdi
-	push	QWORD -664[rbp]
-	push	QWORD -648[rbp]
-	lea	rdi, -416[rbp]
-	push	rdi
-	mov	rdi, rax
-	call	set_small_and_big_number
-	add	rsp, 48
-	mov	eax, DWORD -688[rbp]
-	mov	DWORD -692[rbp], eax
-	lea	rax, -692[rbp]
-	mov	QWORD -632[rbp], rax
-	mov	eax, DWORD -688[rbp]
-	cdqe
-	mov	WORD -624[rbp+rax*2], 0
-	mov	eax, DWORD -716[rbp]
-	cmp	eax, DWORD -732[rbp]
-	jne	.L50
-	mov	DWORD -672[rbp], 0
-	jmp	.L51
-.L52:
-	mov	eax, DWORD -672[rbp]
-	cdqe
-	movzx	edx, WORD -416[rbp+rax*2]
-	mov	eax, DWORD -672[rbp]
-	cdqe
-	mov	WORD -624[rbp+rax*2], dx
-	add	DWORD -672[rbp], 1
-.L51:
-	mov	eax, DWORD -688[rbp]
-	cmp	DWORD -672[rbp], eax
-	jl	.L52
-	mov	DWORD -668[rbp], 0
-	jmp	.L53
-.L54:
+	lea	rax, -688[rbp]				; -688[rbp] = bigger number lentgh
+	mov	QWORD -664[rbp], rax		; -664[rbp] = address(bigger number lentgh)
+	lea	rax, -680[rbp]				; -680[rbp] = smaller number lentgh
+	mov	QWORD -656[rbp], rax		; -656[rbp] = address(smaller number lentgh)
+	lea	rax, -684[rbp]				; -684[rbp] = bigger number sign
+	mov	QWORD -648[rbp], rax		; -648[rbp] = address(bigger number sign)
+	lea	rax, -676[rbp]				; -676[rbp] = smaller number sign
+	mov	QWORD -640[rbp], rax		; -640[rbp] = address(smaller number sign)
+	push	QWORD -656[rbp]			; 12th parameter of set_small_and_big_number = address(smaller number lentgh)
+	push	QWORD -640[rbp]			; 11th parameter of set_small_and_big_number = address(smaller number sign)
+	lea	rax, -208[rbp]				; rax = -208[rbp] = smaller number[0]
+	push	rax						; 10th parameter of set_small_and_big_number = rax = address(smaller number[0])
+	push	QWORD -664[rbp]			; 9th parameter of set_small_and_big_number = address(bigger number lentgh)
+	push	QWORD -648[rbp]			; 8th parameter of set_small_and_big_number = address(bigger number sign)
+	lea	rax, -416[rbp]				; rax = -416[rbp] = bigger number[0]	
+	push	rax						; 7th parameter of set_small_and_big_number = rax = address(bigger number[0])
+									; first six parameter of set_small_and_big_number is equal to add function so don't change them
+	call	set_small_and_big_number; bigger number = max(first number, second number), smaller number = min(first number, second number), ...
+	add	rsp, 48						; in place of pushes for set_small_and_big_number
+	mov	eax, DWORD -684[rbp]		; eax = bigger number sign
+	cmp	eax, DWORD -676[rbp]		; compare signs of numbers equal or not, -676[rbp] = smaller number sign
+	jne	.signs_are_differnt
+.signa_are_same:
+	mov	DWORD -668[rbp], 0			; -668[rbp] is temp value of loop
+	jmp	.check_loop_condition2
+.loop_body2:
 	mov	eax, DWORD -668[rbp]
 	cdqe
-	movzx	eax, WORD -624[rbp+rax*2]
-	mov	edx, eax
+	movzx	eax, WORD -416[rbp+rax*2]
+	mov	edx, eax					; edx = bigger number[i]
 	mov	eax, DWORD -668[rbp]
 	cdqe
-	movzx	eax, WORD -208[rbp+rax*2]
+	movzx	eax, WORD -208[rbp+rax*2]	; eax = smaller number[i]
 	add	eax, edx
 	mov	edx, eax
 	mov	eax, DWORD -668[rbp]
 	cdqe
-	mov	WORD -624[rbp+rax*2], dx
+	mov	WORD -416[rbp+rax*2], dx	; bigger number[i] = smaller number[i] + bigger number[i]
 	add	DWORD -668[rbp], 1
-.L53:
+.check_loop_condition2:
 	mov	eax, DWORD -680[rbp]
-	cmp	DWORD -668[rbp], eax
-	jl	.L54
-	mov	rdx, QWORD -632[rbp]
-	lea	rax, -624[rbp]
-	mov	rsi, rdx
-	mov	rdi, rax
+	cmp	DWORD -668[rbp], eax		; compare temp value of loop and smaller number lentgh
+	jl	.loop_body2	
+.normalizing_number:
+	mov	rsi, QWORD -664[rbp]		; 2nd parameter of normalize array = address(bigger number lentgh)
+	lea	rdi, -416[rbp]				; 1st parameter of normalize array = address(bigger number[0])
 	call	normalize_array
-	mov	edx, DWORD -692[rbp]
-	lea	rax, -624[rbp]
-	mov	esi, edx
-	mov	rdi, rax
+.reverse:
+	mov	esi, DWORD -688[rbp]		; 2nd parameter of raverse array = bigger number lentgh
+	lea	rdi, -416[rbp]				; 1st parameter of reverse array = address(bigger number[0])
 	call	reverse_array
-	mov	ecx, DWORD -692[rbp]
-	mov	edx, DWORD -716[rbp]
-	lea	rax, -624[rbp]
-	mov	esi, ecx
-	mov	rdi, rax
+.print:
+	mov	edx, DWORD -684[rbp]		; 3rd parameter of print array = bigger number sign
+	mov	esi, DWORD -688[rbp]		; 2nd parameter of print array = bigger number lentgh
+	lea	rdi, -416[rbp]				; 1st parameter of print array = address(bigger number[0])
 	call	print_array
-	jmp	.L57
-.L50:
-	mov	ecx, DWORD -680[rbp]
-	lea	rdx, -208[rbp]
-	mov	rsi, QWORD -664[rbp]
-	lea	rax, -416[rbp]
-	mov	r8d, 0
-	mov	rdi, rax
+	jmp	.add_end
+.signs_are_differnt:
+	mov	r8d, 0						; 5th parameter of subtract_first_element_from_second = 0
+	mov	ecx, DWORD -680[rbp]		; 4th parameter of subtract_first_element_from_second = address(smaller number lentgh)
+	lea	rdx, -208[rbp]				; 3rd parameter of subtract_first_element_from_second = address(smaller number[0])
+	mov	rsi, QWORD -664[rbp]		; 2nd parameter of subtract_first_element_from_second = address(bigger number lentgh)
+	lea	rdi, -416[rbp]				; 1st parameter of subtract_first_element_from_second = address(bigger number[0])
 	call	subtract_first_element_from_second
-	mov	edx, DWORD -688[rbp]
-	lea	rax, -416[rbp]
-	mov	esi, edx
-	mov	rdi, rax
+	mov	esi, DWORD -688[rbp]		; 2nd parameter of raverse array = bigger number lentgh
+	lea	rdi, -416[rbp]				; 1st parameter of reverse array = address(bigger number[0])
 	call	reverse_array
-	mov	edx, DWORD -684[rbp]
-	mov	ecx, DWORD -688[rbp]
-	lea	rax, -416[rbp]
-	mov	esi, ecx
-	mov	rdi, rax
+	mov	edx, DWORD -684[rbp]		; 3rd parameter of print array = bigger number sign
+	mov	esi, DWORD -688[rbp]		; 2nd parameter of print array = bigger number lentgh
+	lea	rdi, -416[rbp]				; 1st parameter of print array = address(bigger number[0])
 	call	print_array
-.L57:
-	je	.L56
-.L56:
+.add_end:
 	leave
 	ret
 

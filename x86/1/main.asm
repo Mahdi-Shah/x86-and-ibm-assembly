@@ -482,62 +482,199 @@ reverse_array:
 get_number:
 	push	rbp
 	mov	rbp, rsp
-	sub	rsp, 48
-	mov	QWORD -24[rbp], rdi
-	mov	QWORD -32[rbp], rsi
-	mov	QWORD -40[rbp], rdx
-	mov	DWORD -4[rbp], 0
-	jmp	.L10
-.L11:
+	sub	rsp, 48						; set rbp and rsp
+	mov	QWORD -24[rbp], rdi			; -24[rbp] = address(output[0])
+	mov	QWORD -32[rbp], rsi			; -32[rbp] = address(input sign)
+	mov	QWORD -40[rbp], rdx			; -40[rbp] = address(input lentgh)
+	mov	DWORD -4[rbp], 0			; -4[rbp] = temp number of loop = i
+	jmp	.check_loop_condition9
+.loop_body9:
 	mov	eax, DWORD -4[rbp]
 	cdqe
 	lea	rdx, [rax+rax]
-	mov	rax, QWORD -24[rbp]
+	mov	rax, QWORD -24[rbp]			; rax = address(output[0])
 	add	rax, rdx
-	mov	WORD [rax], 0
-	add	DWORD -4[rbp], 1
-.L10:
-	cmp	DWORD -4[rbp], 99
-	jle	.L11
-	mov	DWORD -4[rbp], 0
-	jmp	.L12
-.L16:
-	cmp	BYTE -5[rbp], 45
-	jne	.L13
-	mov	rax, QWORD -32[rbp]
-	mov	DWORD [rax], -1
-	sub	DWORD -4[rbp], 1
-	jmp	.L14
-.L13:
-	movsx	ax, BYTE -5[rbp]
-	lea	ecx, -48[rax]
+	mov	WORD [rax], 0				; output[i] = 0
+	add	DWORD -4[rbp], 1			; i++
+.check_loop_condition9:
+	cmp	DWORD -4[rbp], 99			; compare i and 99
+	jle	.loop_body9
+	mov	DWORD -4[rbp], 0			; -4[rbp] = temp number of loop = i
+	jmp	.check_initialize_loop_condition
+.initialize_number_1:
+	cmp	BYTE -5[rbp], 45			; compare character and '-'
+	jne	.initialize_number_2
+	mov	rax, QWORD -32[rbp]			; rax = address(output sign)
+	mov	DWORD [rax], -1				; [rax] = sign = -1
+	sub	DWORD -4[rbp], 1			; i--
+	jmp	.continue_loop
+.initialize_number_2:
+	movsx	ax, BYTE -5[rbp]		; ax = character
+	lea	ecx, -48[rax]				; ecx = rax - 48. convert charcter number to integer number
 	mov	eax, DWORD -4[rbp]
 	cdqe
 	lea	rdx, [rax+rax]
 	mov	rax, QWORD -24[rbp]
 	add	rax, rdx
 	mov	edx, ecx
-	mov	WORD [rax], dx
-.L14:
+	mov	WORD [rax], dx				; output[i] = dx = ecx
+.continue_loop:
 	add	DWORD -4[rbp], 1
-.L12:
+.check_initialize_loop_condition:
 	call	getchar
-	mov	BYTE -5[rbp], al
-	cmp	BYTE -5[rbp], 32
-	je	.L15
-	cmp	BYTE -5[rbp], 10
-	jne	.L16
-.L15:
+	mov	BYTE -5[rbp], al			; input character and save it in -5[rbp]
+	cmp	BYTE -5[rbp], 32			; compare character and ' '
+	je	.set_lentgh_and_reverse
+	cmp	BYTE -5[rbp], 10			; compare character and '\n'
+	jne	.initialize_number_1
+.set_lentgh_and_reverse:
 	mov	rax, QWORD -40[rbp]
-	mov	edx, DWORD -4[rbp]
-	mov	DWORD [rax], edx
-	mov	rax, QWORD -40[rbp]
-	mov	edx, DWORD [rax]
-	mov	rax, QWORD -24[rbp]
-	mov	esi, edx
-	mov	rdi, rax
+	mov	edx, DWORD -4[rbp]			; edx = -4[rbp] = lentgh
+	mov	DWORD [rax], edx			; [rax] = input lentgh
+	mov	rax, QWORD -40[rbp] 
+	mov	esi, DWORD [rax]			; 2nd parameter of reverse array = address(input lentgh)
+	mov	rdi, QWORD -24[rbp]			; 1st parameter of reverse array = address(input[0])
 	call	reverse_array
 	leave
+	ret
+
+normalize_array:
+	push	rbp
+	mov	rbp, rsp					; set rbp and rsp
+	mov	QWORD -24[rbp], rdi			; -24[rbp] = address(input[0])
+	mov	QWORD -32[rbp], rsi			; -32[rbp] = address(input lentgh)
+	mov	DWORD -8[rbp], 0			; -8[rbp] = loop temp number = i
+	jmp	.check_loop_condition10
+.sign_is_negative:
+	mov	eax, DWORD -8[rbp]
+	cdqe
+	lea	rdx, [rax+rax]
+	mov	rax, QWORD -24[rbp]
+	add	rax, rdx
+	movzx	eax, WORD [rax]			; eax = input[i]
+	lea	ecx, 10[rax]				; ecx = eax + 10
+	mov	eax, DWORD -8[rbp]
+	cdqe
+	lea	rdx, [rax+rax]
+	mov	rax, QWORD -24[rbp]
+	add	rax, rdx
+	mov	edx, ecx
+	mov	WORD [rax], dx				; input[i] += 10
+	mov	eax, DWORD -8[rbp]
+	cdqe
+	add	rax, 1
+	lea	rdx, [rax+rax]
+	mov	rax, QWORD -24[rbp]
+	add	rax, rdx
+	movzx	eax, WORD [rax]			; eax = input[i + 1]
+	lea	ecx, -1[rax]				; ecx = iax - 1
+	mov	eax, DWORD -8[rbp]
+	cdqe
+	add	rax, 1
+	lea	rdx, [rax+rax]
+	mov	rax, QWORD -24[rbp]
+	add	rax, rdx
+	mov	edx, ecx
+	mov	WORD [rax], dx				; input[i + 1] -= 1
+.check_negativity_loop:
+	mov	eax, DWORD -8[rbp]
+	cdqe
+	lea	rdx, [rax+rax]
+	mov	rax, QWORD -24[rbp]
+	add	rax, rdx
+	movzx	eax, WORD [rax]			; eax = input[i]
+	test	ax, ax					; update SP fucus on ax
+	js	.sign_is_negative
+	jmp	.check_bigger_than9_loop
+.bigger_than9:
+	mov	eax, DWORD -8[rbp]
+	cdqe
+	lea	rdx, [rax+rax]
+	mov	rax, QWORD -24[rbp]
+	add	rax, rdx
+	movzx	eax, WORD [rax]			; eax = input[i]
+	lea	ecx, -10[rax]				; ecx = eax - 10
+	mov	eax, DWORD -8[rbp]
+	cdqe
+	lea	rdx, [rax+rax]
+	mov	rax, QWORD -24[rbp]
+	add	rax, rdx
+	mov	edx, ecx
+	mov	WORD [rax], dx				; input[i] -= 10
+	mov	eax, DWORD -8[rbp]
+	cdqe
+	add	rax, 1
+	lea	rdx, [rax+rax]
+	mov	rax, QWORD -24[rbp]
+	add	rax, rdx
+	movzx	eax, WORD [rax]			; eax = input[i + 1]
+	lea	ecx, 1[rax]					; ecx = input[i + 1] + 1
+	mov	eax, DWORD -8[rbp]
+	cdqe
+	add	rax, 1
+	lea	rdx, [rax+rax]
+	mov	rax, QWORD -24[rbp]
+	add	rax, rdx
+	mov	edx, ecx
+	mov	WORD [rax], dx				; input[i + 1] += 1
+	mov	rax, QWORD -32[rbp]
+	mov	eax, DWORD [rax]
+	sub	eax, 1						; eax = lentgh - 1
+	cmp	DWORD -8[rbp], eax			; compare i and lentgh - 1
+	jne	.check_bigger_than9_loop
+	mov	eax, DWORD -8[rbp]
+	cdqe
+	lea	rdx, [rax+rax]
+	mov	rax, QWORD -24[rbp]
+	add	rax, rdx
+	movzx	eax, WORD [rax]			; eax = input[i]
+	cmp	ax, 9
+	jg	.check_bigger_than9_loop
+	mov	rax, QWORD -32[rbp]			; in this place i = lentgh - 1 and 0 <= input[i] < 10 so lentgh must be increase
+	mov	eax, DWORD [rax]			; eax = input lentgh
+	lea	edx, 1[rax]
+	mov	rax, QWORD -32[rbp]
+	mov	DWORD [rax], edx			; input lentgh += 1
+.check_bigger_than9_loop:
+	mov	eax, DWORD -8[rbp]
+	cdqe
+	lea	rdx, [rax+rax]
+	mov	rax, QWORD -24[rbp]
+	add	rax, rdx
+	movzx	eax, WORD [rax]			; eax = input[i]
+	cmp	ax, 9						; compare input[i] and eax
+	jg	.bigger_than9
+	add	DWORD -8[rbp], 1
+.check_loop_condition10:
+	mov	rax, QWORD -32[rbp]
+	mov	eax, DWORD [rax]			; eax = input lentgh
+	cmp	DWORD -8[rbp], eax			; compare i and lentgh
+	jl	.check_negativity_loop
+	mov	rax, QWORD -32[rbp]
+	mov	eax, DWORD [rax]
+	sub	eax, 1
+	mov	DWORD -4[rbp], eax			; -4[rbp] = loop temp number = i = lentgh - 1
+	jmp	.check_delete_adition_zeros_loop_condition
+.delete_adition_zeros_loop_body:
+	mov	eax, DWORD -4[rbp]
+	cdqe
+	lea	rdx, [rax+rax]
+	mov	rax, QWORD -24[rbp]
+	add	rax, rdx
+	movzx	eax, WORD [rax]			; eax = input[i]
+	test	ax, ax
+	jne	.normalize_end
+	mov	rax, QWORD -32[rbp]
+	mov	eax, DWORD [rax]
+	lea	edx, -1[rax]
+	mov	rax, QWORD -32[rbp]
+	mov	DWORD [rax], edx			; lentgh -= 1
+	sub	DWORD -4[rbp], 1
+.check_delete_adition_zeros_loop_condition:
+	cmp	DWORD -4[rbp], 0			; cmpare i and 0
+	jg	.delete_adition_zeros_loop_body
+.normalize_end:
+	pop	rbp
 	ret
 
 first_input_is_bigger:
@@ -761,144 +898,6 @@ set_small_and_big_number:
 	leave
 	ret
 
-normalize_array:
-	push	rbp
-	mov	rbp, rsp
-	mov	QWORD -24[rbp], rdi
-	mov	QWORD -32[rbp], rsi
-	mov	DWORD -8[rbp], 0
-	jmp	.L32
-.L34:
-	mov	eax, DWORD -8[rbp]
-	cdqe
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -24[rbp]
-	add	rax, rdx
-	movzx	eax, WORD [rax]
-	lea	ecx, 10[rax]
-	mov	eax, DWORD -8[rbp]
-	cdqe
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -24[rbp]
-	add	rax, rdx
-	mov	edx, ecx
-	mov	WORD [rax], dx
-	mov	eax, DWORD -8[rbp]
-	cdqe
-	add	rax, 1
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -24[rbp]
-	add	rax, rdx
-	movzx	eax, WORD [rax]
-	lea	ecx, -1[rax]
-	mov	eax, DWORD -8[rbp]
-	cdqe
-	add	rax, 1
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -24[rbp]
-	add	rax, rdx
-	mov	edx, ecx
-	mov	WORD [rax], dx
-.L33:
-	mov	eax, DWORD -8[rbp]
-	cdqe
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -24[rbp]
-	add	rax, rdx
-	movzx	eax, WORD [rax]
-	test	ax, ax
-	js	.L34
-	jmp	.L35
-.L37:
-	mov	eax, DWORD -8[rbp]
-	cdqe
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -24[rbp]
-	add	rax, rdx
-	movzx	eax, WORD [rax]
-	lea	ecx, -10[rax]
-	mov	eax, DWORD -8[rbp]
-	cdqe
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -24[rbp]
-	add	rax, rdx
-	mov	edx, ecx
-	mov	WORD [rax], dx
-	mov	eax, DWORD -8[rbp]
-	cdqe
-	add	rax, 1
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -24[rbp]
-	add	rax, rdx
-	movzx	eax, WORD [rax]
-	lea	ecx, 1[rax]
-	mov	eax, DWORD -8[rbp]
-	cdqe
-	add	rax, 1
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -24[rbp]
-	add	rax, rdx
-	mov	edx, ecx
-	mov	WORD [rax], dx
-	mov	rax, QWORD -32[rbp]
-	mov	eax, DWORD [rax]
-	sub	eax, 1
-	cmp	DWORD -8[rbp], eax
-	jne	.L35
-	mov	eax, DWORD -8[rbp]
-	cdqe
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -24[rbp]
-	add	rax, rdx
-	movzx	eax, WORD [rax]
-	cmp	ax, 9
-	jg	.L35
-	mov	rax, QWORD -32[rbp]
-	mov	eax, DWORD [rax]
-	lea	edx, 1[rax]
-	mov	rax, QWORD -32[rbp]
-	mov	DWORD [rax], edx
-.L35:
-	mov	eax, DWORD -8[rbp]
-	cdqe
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -24[rbp]
-	add	rax, rdx
-	movzx	eax, WORD [rax]
-	cmp	ax, 9
-	jg	.L37
-	add	DWORD -8[rbp], 1
-.L32:
-	mov	rax, QWORD -32[rbp]
-	mov	eax, DWORD [rax]
-	cmp	DWORD -8[rbp], eax
-	jl	.L33
-	mov	rax, QWORD -32[rbp]
-	mov	eax, DWORD [rax]
-	sub	eax, 1
-	mov	DWORD -4[rbp], eax
-	jmp	.L39
-.L43:
-	mov	eax, DWORD -4[rbp]
-	cdqe
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -24[rbp]
-	add	rax, rdx
-	movzx	eax, WORD [rax]
-	test	ax, ax
-	jne	.L45
-	mov	rax, QWORD -32[rbp]
-	mov	eax, DWORD [rax]
-	lea	edx, -1[rax]
-	mov	rax, QWORD -32[rbp]
-	mov	DWORD [rax], edx
-	sub	DWORD -4[rbp], 1
-.L39:
-	cmp	DWORD -4[rbp], 0
-	jg	.L43
-.L45:
-	pop	rbp
-	ret
 
 subtract_first_element_from_second:
 	push	rbp

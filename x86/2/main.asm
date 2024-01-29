@@ -225,7 +225,7 @@ asm_main:
 	add	DWORD -108[rbp], 1
 .check_inner_loop6_condition:
 	mov	eax, DWORD -148[rbp]
-	cmp	DWORD -108[rbp], eax
+	cmp	DWORD -108[rbp], eax				; compare j and n
 	jl	.inner_loop6_body
 .break_inner_loop6:
 	cmp	DWORD -112[rbp], 0					; compare flag and 0

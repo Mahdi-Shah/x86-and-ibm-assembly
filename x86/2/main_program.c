@@ -10,13 +10,13 @@ int main()
     int n;
     scanf("%d", &n);
 
-    double matrix[n][n + 1];
+    float matrix[n][n + 1];
 
     for (int i = 0; i < n; i++)
     {
         for (int j = 0; j < n + 1; j++)
         {
-            scanf("%lf", &matrix[i][j]);
+            scanf("%f", &matrix[i][j]);
         }
     }
 
@@ -42,15 +42,6 @@ int main()
                     for (int s = 0; s < n + 1; s++)
                     {
                         matrix[k][s] -= matrix[i][s] * coeficcient;
-                    }
-                }
-                for (int t = 0; t < n; t++)
-                {
-                    for (int r = 0; r < n + 1; r++)
-                    {
-                        double a = matrix[t][r];
-                        if (a > MIN_DOUBLE_NEGATIVE && a < MIN_DOUBLE)
-                            matrix[t][r] = 0;
                     }
                 }
                 break;

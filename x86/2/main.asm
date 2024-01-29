@@ -17,390 +17,278 @@ asm_main:
 	push	r13
 	push	r12
 	push	rbx
-	sub	rsp, 184
+	sub	rsp, 184							; set registers
 	mov	rax, rsp
-	mov	QWORD -200[rbp], rax
-	lea	rax, -148[rbp]
-	mov	rsi, rax
+	mov	QWORD -184[rbp], rax				; save rsp on -184[rbp]
+	lea	rax, -148[rbp]						; -148[rbp] = n = number of rows
+	mov	rsi, rax							; rsi = address(n)
 	lea	rax, read_int_format
-	mov	rdi, rax
-	mov	eax, 0
-	call	scanf
+	mov	rdi, rax							; rdi = address(read_int_format)
+	mov	eax, 0								; why it is zero
+	call	scanf							; set n
 	mov	eax, DWORD -148[rbp]
-	lea	ecx, 1[rax]
-	mov	esi, DWORD -148[rbp]
-	movsx	rax, ecx
-	sub	rax, 1
-	mov	QWORD -96[rbp], rax
-	movsx	rax, ecx
-	mov	QWORD -224[rbp], rax
-	mov	QWORD -216[rbp], 0
-	movsx	rax, ecx
-	lea	rbx, 0[0+rax*4]
-	movsx	rax, esi
-	sub	rax, 1
-	mov	QWORD -88[rbp], rax
-	movsx	rax, ecx
-	mov	QWORD -176[rbp], rax
-	mov	QWORD -168[rbp], 0
-	movsx	rax, esi
-	mov	QWORD -192[rbp], rax
-	mov	QWORD -184[rbp], 0
-	mov	r8, QWORD -176[rbp]
-	mov	r9, QWORD -168[rbp]
-	mov	rdx, r9
-	mov	r10, QWORD -192[rbp]
-	mov	r11, QWORD -184[rbp]
-	mov	rax, r10
-	imul	rdx, rax
-	mov	rax, r11
-	mov	rdi, r8
-	imul	rax, rdi
-	lea	rdi, [rdx+rax]
-	mov	rax, r8
-	mul	r10
-	add	rdi, rdx
-	mov	rdx, rdi
-	movsx	rax, ecx
-	mov	r14, rax
-	mov	r15d, 0
-	movsx	rax, esi
-	mov	r12, rax
-	mov	r13d, 0
-	mov	rdx, r15
-	imul	rdx, r12
-	mov	rax, r13
-	imul	rax, r14
-	lea	rdi, [rdx+rax]
-	mov	rax, r14
-	mul	r12
-	add	rdi, rdx
-	mov	rdx, rdi
-	movsx	rdx, ecx
-	movsx	rax, esi
-	imul	rax, rdx
-	lea	rdx, 0[0+rax*4]
-	mov	eax, 16
-	sub	rax, 1
-	add	rax, rdx
-	mov	edi, 16
-	mov	edx, 0
-	div	rdi
-	imul	rax, rax, 16
+	lea	ecx, 1[rax]							; ecx = n + 1
+	mov	esi, DWORD -148[rbp]				; esi = n
+	movsxd	rax, ecx
+	lea	rbx, [rax]							; rbx = n + 1
+	movsxd	rax, esi
+	mul	ecx									; rax = n * (n + 1)
+	lea	rdx, [rax*4]						; rdx = 4 * n * (n + 1)
+	mov	rax, 4095
+	add	rax, rdx							; rax = 4095 + 4 * n * (n + 1)
+	sar rax, 12
+	sal rax, 12								; rax = ceil(4 * n * (n + 1) / 4096) * 4096
 	mov	rcx, rax
-	and	rcx, -4096
 	mov	rdx, rsp
-	sub	rdx, rcx
-.L2:
+	sub	rdx, rcx							; rdx = rsp - rsx
+.loop_for_set_rsp:
 	cmp	rsp, rdx
-	je	.L3
-	sub	rsp, 4096
-	or	QWORD 4088[rsp], 0
-	jmp	.L2
-.L3:
-	mov	rdx, rax
-	and	edx, 4095
-	sub	rsp, rdx
-	mov	rdx, rax
-	and	edx, 4095
-	test	rdx, rdx
-	je	.L4
-	and	eax, 4095
-	sub	rax, 8
-	add	rax, rsp
-	or	QWORD [rax], 0
-.L4:
-	mov	rax, rsp
-	add	rax, 3
-	shr	rax, 2
-	sal	rax, 2
-	mov	QWORD -80[rbp], rax
-	mov	DWORD -144[rbp], 0
-	jmp	.L5
-.L8:
-	mov	DWORD -140[rbp], 0
-	jmp	.L6
-.L7:
+	je	.set_matrix_begin_point
+	sub	rsp, 4096							; subtract rsp to have enough space for save matrix
+	jmp	.loop_for_set_rsp
+.set_matrix_begin_point:
+	mov	QWORD -80[rbp], rsp					; -80[rbp] = address(matrix[0][0])
+	mov	DWORD -144[rbp], 0					; -144[rbp] = outer loop temp number = i
+	jmp	.check_outer_loop1_condition
+.outer_loop1_body:
+	mov	DWORD -140[rbp], 0					; -140[rbp] = inner loop temp number = j
+											; in the loop in down initialize matrix[i][j]
+	jmp	.check_inner_loop1_condition
+.inner_loop1_body:
 	mov	rcx, rbx
-	shr	rcx, 2
 	mov	eax, DWORD -140[rbp]
-	movsx	rdx, eax
+	movsxd	rdx, eax						; rdx = j
 	mov	eax, DWORD -144[rbp]
 	cdqe
-	imul	rax, rcx
-	add	rax, rdx
-	lea	rdx, 0[0+rax*4]
+	imul	rax, rcx						; rax = i * (n + 1)
+	add	rax, rdx							; rax = i * (n + 1) + j
+	lea	rdx, [rax*4]						; rdx = (i * (n + 1) + j) * 4
 	mov	rax, QWORD -80[rbp]
-	add	rax, rdx
+	add	rax, rdx							; rax = matrix[i][j]
 	mov	rsi, rax
-	lea	rax, read_float_format
-	mov	rdi, rax
+	lea	rdi, read_float_format
 	mov	eax, 0
 	call	scanf
-	add	DWORD -140[rbp], 1
-.L6:
+	add	DWORD -140[rbp], 1					; j++
+.check_inner_loop1_condition:
 	mov	eax, DWORD -148[rbp]
-	cmp	DWORD -140[rbp], eax
-	jle	.L7
-	add	DWORD -144[rbp], 1
-.L5:
+	cmp	DWORD -140[rbp], eax				; compare i and n
+	jle	.inner_loop1_body
+	add	DWORD -144[rbp], 1					; i++
+.check_outer_loop1_condition:
 	mov	eax, DWORD -148[rbp]
-	cmp	DWORD -144[rbp], eax
-	jl	.L8
-	mov	DWORD -136[rbp], 0
-	jmp	.L9
-.L23:
-	mov	DWORD -132[rbp], 0
-	jmp	.L10
-.L22:
-	mov	rsi, rbx
-	shr	rsi, 2
-	mov	rax, QWORD -80[rbp]
-	mov	edx, DWORD -132[rbp]
-	movsx	rcx, edx
-	mov	edx, DWORD -136[rbp]
-	movsx	rdx, edx
+	cmp	DWORD -144[rbp], eax				; compare i and n
+	jl	.outer_loop1_body
+											; in the loop in the down run RREF orders
+	mov	DWORD -136[rbp], 0					; -136[rbp] = outer loop temp number = i
+	jmp	.check_outer_loop2_condition
+.outer_loop2_body:
+	mov	DWORD -132[rbp], 0					; -132[rbp] = inner loop temp number = j
+	jmp	.check_inner_loop2_condition
+.inner_loop2_body:
+	mov	rsi, rbx							; rsi = n + 1
+	mov	rax, QWORD -80[rbp]					; rax = address(matrix[0][0])
+	movsxd	rcx, DWORD -132[rbp]			; rcx = j
+	movsxd	rdx, DWORD -136[rbp]			; rdx = i
 	imul	rdx, rsi
 	add	rdx, rcx
-	movss	xmm0, DWORD [rax+rdx*4]
-	pxor	xmm1, xmm1
-	ucomiss	xmm0, xmm1
-	jp	.L41
-	pxor	xmm1, xmm1
-	ucomiss	xmm0, xmm1
-	je	.L11
-.L41:
+	movss	xmm0, DWORD [rax+rdx*4]			; xmm0 = matrix[i][j]
+	pxor	xmm1, xmm1						; xmm1 = 0.0
+	ucomiss	xmm0, xmm1						; compare xmm0 and xmm1 = 0
+	je	.continue_inner_loop2
+.matrix_i_j_ne_0:							; matrix[i][j] != 0
+	cvtss2sd	xmm0, xmm0					; xmm0 = double(xmm0)
+	movsd	QWORD -72[rbp], xmm0			; -72[rbp] = double(matrix[i][j])
+	mov	DWORD -128[rbp], 0					; -128[rbp] = loop3 temp number = k
+	jmp	.check_loop3_condition
+.loop3_body:
 	mov	rsi, rbx
-	shr	rsi, 2
-	mov	rax, QWORD -80[rbp]
-	mov	edx, DWORD -132[rbp]
-	movsx	rcx, edx
-	mov	edx, DWORD -136[rbp]
-	movsx	rdx, edx
-	imul	rdx, rsi
-	add	rdx, rcx
-	movss	xmm0, DWORD [rax+rdx*4]
-	cvtss2sd	xmm0, xmm0
-	movsd	QWORD -72[rbp], xmm0
-	mov	DWORD -128[rbp], 0
-	jmp	.L13
-.L14:
-	mov	rsi, rbx
-	shr	rsi, 2
 	mov	rax, QWORD -80[rbp]
 	mov	edx, DWORD -128[rbp]
-	movsx	rcx, edx
+	movsxd	rcx, edx
 	mov	edx, DWORD -136[rbp]
-	movsx	rdx, edx
+	movsxd	rdx, edx
 	imul	rdx, rsi
 	add	rdx, rcx
-	movss	xmm0, DWORD [rax+rdx*4]
+	movss	xmm0, DWORD [rax+rdx*4]			; xmm0 = matrix[i][k]
 	cvtss2sd	xmm0, xmm0
-	divsd	xmm0, QWORD -72[rbp]
-	mov	rsi, rbx
-	shr	rsi, 2
+	divsd	xmm0, QWORD -72[rbp]			; xmm0 /= matrix[i][j]
 	cvtsd2ss	xmm0, xmm0
-	mov	rax, QWORD -80[rbp]
-	mov	edx, DWORD -128[rbp]
-	movsx	rcx, edx
-	mov	edx, DWORD -136[rbp]
-	movsx	rdx, edx
-	imul	rdx, rsi
-	add	rdx, rcx
-	movss	DWORD [rax+rdx*4], xmm0
-	add	DWORD -128[rbp], 1
-.L13:
+	movss	DWORD [rax+rdx*4], xmm0			; matrix[i][k] /= matrix[i][j]
+	add	DWORD -128[rbp], 1					; k++
+.check_loop3_condition:
 	mov	eax, DWORD -148[rbp]
-	cmp	DWORD -128[rbp], eax
-	jle	.L14
-	mov	DWORD -124[rbp], 0
-	jmp	.L15
-.L20:
+	cmp	DWORD -128[rbp], eax				; compare k and n
+	jle	.loop3_body
+	mov	DWORD -124[rbp], 0					; now loop 3 end and matrix[i] /= matrix[i][j], 
+											; -124[rbp] = loop4 temp number = k
+	jmp	.check_loop4_condition
+.loop4_body:
 	mov	eax, DWORD -124[rbp]
-	cmp	eax, DWORD -136[rbp]
-	je	.L44
+	cmp	eax, DWORD -136[rbp]				; compare k and i
+	je	.continue_loop4
 	mov	rsi, rbx
-	shr	rsi, 2
 	mov	rax, QWORD -80[rbp]
 	mov	edx, DWORD -132[rbp]
-	movsx	rcx, edx
+	movsxd	rcx, edx
 	mov	edx, DWORD -124[rbp]
-	movsx	rdx, edx
+	movsxd	rdx, edx
 	imul	rdx, rsi
 	add	rdx, rcx
-	movss	xmm0, DWORD [rax+rdx*4]
-	cvtss2sd	xmm0, xmm0
-	movsd	QWORD -64[rbp], xmm0
-	mov	DWORD -120[rbp], 0
-	jmp	.L18
-.L19:
+	movss	xmm0, DWORD [rax+rdx*4]			; xmm0 = matrix[k][j]
+	cvtss2sd	xmm0, xmm0					
+	movsd	QWORD -64[rbp], xmm0			; -64[rbp] = double(matrix[k][j])
+	mov	DWORD -120[rbp], 0					; -120[rbp] = loop5 temp number = s
+	jmp	.check_loop5_condition
+.loop5_body:
 	mov	rsi, rbx
-	shr	rsi, 2
 	mov	rax, QWORD -80[rbp]
 	mov	edx, DWORD -120[rbp]
-	movsx	rcx, edx
+	movsxd	rcx, edx
 	mov	edx, DWORD -124[rbp]
-	movsx	rdx, edx
+	movsxd	rdx, edx
 	imul	rdx, rsi
 	add	rdx, rcx
-	movss	xmm0, DWORD [rax+rdx*4]
+	movss	xmm0, DWORD [rax+rdx*4]			; xmm0 = matrix[k][s]
 	cvtss2sd	xmm0, xmm0
 	mov	rsi, rbx
-	shr	rsi, 2
 	mov	rax, QWORD -80[rbp]
 	mov	edx, DWORD -120[rbp]
-	movsx	rcx, edx
+	movsxd	rcx, edx
 	mov	edx, DWORD -136[rbp]
-	movsx	rdx, edx
+	movsxd	rdx, edx
 	imul	rdx, rsi
 	add	rdx, rcx
-	movss	xmm1, DWORD [rax+rdx*4]
+	movss	xmm1, DWORD [rax+rdx*4]			; xmm1 = matrix[i][s]
 	cvtss2sd	xmm1, xmm1
-	mulsd	xmm1, QWORD -64[rbp]
-	subsd	xmm0, xmm1
+	mulsd	xmm1, QWORD -64[rbp]			; xmm1 = double(matrix[k][j]) * double(matrix[i][s])
+	subsd	xmm0, xmm1						; xmm0 -= xmm1
 	mov	rsi, rbx
-	shr	rsi, 2
 	cvtsd2ss	xmm0, xmm0
 	mov	rax, QWORD -80[rbp]
 	mov	edx, DWORD -120[rbp]
-	movsx	rcx, edx
+	movsxd	rcx, edx
 	mov	edx, DWORD -124[rbp]
-	movsx	rdx, edx
+	movsxd	rdx, edx
 	imul	rdx, rsi
 	add	rdx, rcx
-	movss	DWORD [rax+rdx*4], xmm0
-	add	DWORD -120[rbp], 1
-.L18:
+	movss	DWORD [rax+rdx*4], xmm0			; matrix[k][s] = xmm0
+	add	DWORD -120[rbp], 1					; s++
+.check_loop5_condition:
 	mov	eax, DWORD -148[rbp]
-	cmp	DWORD -120[rbp], eax
-	jle	.L19
-	jmp	.L17
-.L44:
-	nop
-.L17:
-	add	DWORD -124[rbp], 1
-.L15:
+	cmp	DWORD -120[rbp], eax				; compare s and n
+	jle	.loop5_body
+.continue_loop4:
+	add	DWORD -124[rbp], 1					; k++
+.check_loop4_condition:
 	mov	eax, DWORD -148[rbp]
-	cmp	DWORD -124[rbp], eax
-	jl	.L20
-	jmp	.L21
-.L11:
-	add	DWORD -132[rbp], 1
-.L10:
+	cmp	DWORD -124[rbp], eax				; compare k and n
+	jl	.loop4_body
+	jmp	.outer_loop2_continue
+.continue_inner_loop2:
+	add	DWORD -132[rbp], 1					; j++
+.check_inner_loop2_condition:
 	mov	eax, DWORD -148[rbp]
 	cmp	DWORD -132[rbp], eax
-	jl	.L22
-.L21:
-	add	DWORD -136[rbp], 1
-.L9:
+	jl	.inner_loop2_body
+.outer_loop2_continue:
+	add	DWORD -136[rbp], 1					; i++
+.check_outer_loop2_condition:
 	mov	eax, DWORD -148[rbp]
-	cmp	DWORD -136[rbp], eax
-	jl	.L23
-	mov	DWORD -116[rbp], 0
-	jmp	.L24
-.L32:
-	mov	DWORD -112[rbp], 1
-	mov	DWORD -108[rbp], 0
-	jmp	.L25
-.L29:
+	cmp	DWORD -136[rbp], eax				; compare i and n
+	jl	.outer_loop2_body
+	mov	DWORD -116[rbp], 0					; -116[rbp] = outer loop6 temp number = i
+	jmp	.check_outer_loop6_condition
+.outer_loop6_body:
+	mov	DWORD -112[rbp], 1					; -112[rbp] = flag for check Impossiblity. if flag = 1 -> matrix is Impossible
+	mov	DWORD -108[rbp], 0					; -108[rbp] = inner loop6 temp number = j
+	jmp	.check_inner_loop6_condition
+.inner_loop6_body:
 	mov	rsi, rbx
-	shr	rsi, 2
 	mov	rax, QWORD -80[rbp]
 	mov	edx, DWORD -108[rbp]
-	movsx	rcx, edx
+	movsxd	rcx, edx
 	mov	edx, DWORD -116[rbp]
-	movsx	rdx, edx
+	movsxd	rdx, edx
 	imul	rdx, rsi
 	add	rdx, rcx
-	movss	xmm0, DWORD [rax+rdx*4]
-	pxor	xmm1, xmm1
-	ucomiss	xmm0, xmm1
-	jp	.L42
-	pxor	xmm1, xmm1
-	ucomiss	xmm0, xmm1
-	je	.L26
-.L42:
-	mov	DWORD -112[rbp], 0
-	jmp	.L28
-.L26:
+	movss	xmm0, DWORD [rax+rdx*4]			; xmm0 = matrix[i][j]
+	pxor	xmm1, xmm1						; xmm1 = 0
+	ucomiss	xmm0, xmm1						; compare xmm0 and xmm1
+	je	.inner_loop6_continue
+	jmp	.make_flag_0
+	
+.make_flag_0:
+	mov	DWORD -112[rbp], 0					; flag = 0
+	jmp	.break_inner_loop6
+.inner_loop6_continue:
 	add	DWORD -108[rbp], 1
-.L25:
+.check_inner_loop6_condition:
 	mov	eax, DWORD -148[rbp]
 	cmp	DWORD -108[rbp], eax
-	jl	.L29
-.L28:
-	cmp	DWORD -112[rbp], 0
-	je	.L30
+	jl	.inner_loop6_body
+.break_inner_loop6:
+	cmp	DWORD -112[rbp], 0					; compare flag and 0
+	je	.outer_loop6_continue				; if flag != 0 -> matrix is Impossible
 	lea	rax, print_Impossible
 	mov	rdi, rax
-	call	puts
-	mov	eax, 0
-	mov	rsp, QWORD -200[rbp]
-	jmp	.L31
-.L30:
-	add	DWORD -116[rbp], 1
-.L24:
+	call	puts							; print 'Impossible'
+	jmp	.func_end
+.outer_loop6_continue:
+	add	DWORD -116[rbp], 1					; i++
+.check_outer_loop6_condition:
 	mov	eax, DWORD -148[rbp]
-	cmp	DWORD -116[rbp], eax
-	jl	.L32
-	mov	DWORD -104[rbp], 0
-	jmp	.L33
-.L39:
-	mov	DWORD -100[rbp], 0
-	jmp	.L34
-.L38:
+	cmp	DWORD -116[rbp], eax				; compare i and n
+	jl	.outer_loop6_body
+											; now matrix isnt Impossible and values will print
+	mov	DWORD -104[rbp], 0					; outer loop7 temp number = i
+	jmp	.check_outer_loop7_condition
+.outer_loop7_body:
+	mov	DWORD -100[rbp], 0					; -100[rbp] = inner loop7 temp number
+	jmp	.check_inner_loop7_condition
+.inner_loop7_body:
 	mov	rsi, rbx
-	shr	rsi, 2
 	mov	rax, QWORD -80[rbp]
 	mov	edx, DWORD -104[rbp]
-	movsx	rcx, edx
+	movsxd	rcx, edx
 	mov	edx, DWORD -100[rbp]
-	movsx	rdx, edx
+	movsxd	rdx, edx
 	imul	rdx, rsi
 	add	rdx, rcx
-	movss	xmm0, DWORD [rax+rdx*4]
-	pxor	xmm1, xmm1
-	ucomiss	xmm0, xmm1
-	jp	.L43
-	pxor	xmm1, xmm1
-	ucomiss	xmm0, xmm1
-	je	.L35
-.L43:
+	movss	xmm0, DWORD [rax+rdx*4]			; xmm0 = matrix[j][i]
+	pxor	xmm1, xmm1						; xmm1 = 0
+	ucomiss	xmm0, xmm1						; compare xmm0 and xmm1
+	je	.inner_loop7_continue
+											; now matrix[j][i] != 0 -> x_i = matrix[j][n]
 	mov	rsi, rbx
-	shr	rsi, 2
 	mov	edx, DWORD -148[rbp]
 	mov	rax, QWORD -80[rbp]
-	movsx	rcx, edx
+	movsxd	rcx, edx
 	mov	edx, DWORD -100[rbp]
-	movsx	rdx, edx
+	movsxd	rdx, edx
 	imul	rdx, rsi
 	add	rdx, rcx
-	movss	xmm0, DWORD [rax+rdx*4]
-	pxor	xmm2, xmm2
-	cvtss2sd	xmm2, xmm0
-	movq	rax, xmm2
-	movq	xmm0, rax
+	movss	xmm0, DWORD [rax+rdx*4]			; xmm0 = matrix[j][n]
+	cvtss2sd	xmm0, xmm0
 	lea	rax, print_float_format
 	mov	rdi, rax
 	mov	eax, 1
-	call	printf
-	jmp	.L37
-.L35:
-	add	DWORD -100[rbp], 1
-.L34:
+	call	printf							; print matrix[j][n]
+	jmp	.outer_loop7_continue
+.inner_loop7_continue:
+	add	DWORD -100[rbp], 1					; j++
+.check_inner_loop7_condition:
 	mov	eax, DWORD -148[rbp]
-	cmp	DWORD -100[rbp], eax
-	jl	.L38
-.L37:
-	add	DWORD -104[rbp], 1
-.L33:
+	cmp	DWORD -100[rbp], eax				; compare j and n
+	jl	.inner_loop7_body
+.outer_loop7_continue:
+	add	DWORD -104[rbp], 1					; i++
+.check_outer_loop7_condition:
 	mov	eax, DWORD -148[rbp]
-	cmp	DWORD -104[rbp], eax
-	jl	.L39
-	mov	rsp, QWORD -200[rbp]
-	mov	eax, 0
-.L31:
-.L40:
+	cmp	DWORD -104[rbp], eax				; compare i and n
+	jl	.outer_loop7_body
+.func_end:
+	mov	rsp, QWORD -184[rbp]
 	lea	rsp, -40[rbp]
 	pop	rbx
 	pop	r12

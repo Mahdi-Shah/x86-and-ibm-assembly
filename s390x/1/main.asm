@@ -364,36 +364,122 @@ first_input_is_bigger:
 	br	%r14
 
 subtract:
-
 	stmg	%r6,%r15,48(%r15)
 	lay	%r15,-200(%r15)
 	lgr	%r11,%r15
-	stg	%r2,192(%r11)
-	lgr	%r1,%r3
-	lgr	%r3,%r4
-	stg	%r5,176(%r11)
-	lgr	%r2,%r6
-	st	%r1,188(%r11)
-	lr	%r1,%r3
-	st	%r1,184(%r11)
-	lr	%r1,%r2
-	st	%r1,172(%r11)
-	l	%r1,172(%r11)
-	lcr	%r1,%r1
-	lgfr	%r4,%r1
-	lgf	%r3,184(%r11)
-	lgf	%r2,188(%r11)
+	#stg	%r2,192(%r11)
+	#lgr	%r1,%r3
+	#lgr	%r3,%r4
+	#stg	%r5,176(%r11)
+	#lgr	%r2,%r6
+	#st	%r1,188(%r11)
+	#lr	%r1,%r3
+	#st	%r1,184(%r11)
+	#lr	%r1,%r2
+	#st	%r1,172(%r11)
+	#l	%r1,172(%r11)
+	#lcr	%r1,%r1
+	lcr	%r6,%r6								# second number sign *= -1
+	#lgf	%r3,184(%r11)
+	#lgf	%r2,188(%r11)
 	lgf	%r1,364(%r11)
-	stg	%r1,160(%r15)
-	lgr	%r6,%r4
-	lg	%r5,176(%r11)
-	lgr	%r4,%r3
-	lgr	%r3,%r2
-	lg	%r2,192(%r11)
+	stg	%r1,160(%r11)						# 160(%r11) = second number len
+	#lg	%r5,176(%r11)
+	#lgr	%r4,%r3
+	#lgr	%r3,%r2
+	#lg	%r2,192(%r11)
 	brasl	%r14,add
-	nopr	%r0
 	lmg	%r6,%r15,248(%r11)
 	br	%r14
+
+multiple:
+	stmg	%r11,%r15,88(%r15)
+	lay	%r15,-424(%r15)
+	lgr	%r11,%r15
+	stg	%r2,184(%r11)					# 184(%r11) = address(first number[0])
+	st	%r3,180(%r11)					# 180(%r11) = first number sign
+	st	%r4,176(%r11)					# 176(%r11) = first number len
+	stg	%r5,168(%r11)					# 168(%r11) = address(second number[0])
+	st	%r6,164(%r11)					# 164(%r11) = second number sign
+										# 588(%r11) = second number len
+	l	%r1,176(%r11)
+	a	%r1,588(%r11)
+	ahi	%r1,1
+	st	%r1,192(%r11)					# 192(%r11) = output len = first number len +
+										# second number len + 1
+	la	%r1,192(%r11)
+	stg	%r1,208(%r11)					# 208(%r11) = address(output len)
+	mvhi	196(%r11),0					# loop temp number = i
+	j	.check_loop7_condition
+.loop7_body:
+	lgf	%r1,196(%r11)
+	sllg	%r1,%r1,1
+	la	%r1,216(%r1,%r11)
+	mvhhi	0(%r1),0					# output[i] = 0
+	asi	196(%r11),1
+.check_loop7_condition:
+	l	%r1,196(%r11)
+	chi	%r1,99							# compare i and 99
+	jle	.loop7_body
+	mvhi	200(%r11),0					# 200(%r11) = outer loop8 temp = i
+	j	.check_outer_loop8_condition
+.outer_loop8_body:
+	mvhi	204(%r11),0					# 204(%r11) = inner loop8 temp = j
+	j	.check_inner_loop8_condition
+.inner_loop8_body:
+	l	%r1,200(%r11)
+	a	%r1,204(%r11)
+	lgfr	%r1,%r1
+	sllg	%r1,%r1,1
+	lh	%r1,216(%r1,%r11)
+	lr	%r2,%r1						# %r2 = output[i + j]
+	lgf	%r1,200(%r11)
+	sllg	%r1,%r1,1
+	ag	%r1,184(%r11)
+	lh	%r1,0(%r1)
+	lr	%r3,%r1						# %r3 = first number[i]
+	lgf	%r1,204(%r11)
+	sllg	%r1,%r1,1
+	ag	%r1,168(%r11)
+	lh	%r1,0(%r1)					# %r1 = second number[j]
+	msr	%r1,%r3
+	ar	%r1,%r2						# %r1 = output[i + j] + first number[i] * second number[j]
+	lr	%r2,%r1
+	l	%r1,200(%r11)
+	a	%r1,204(%r11)
+	lgfr	%r1,%r1
+	sllg	%r1,%r1,1
+	sth	%r2,216(%r1,%r11)			# output[i + j] += first number[i] * second number[j]
+	asi	204(%r11),1					# j++
+.check_inner_loop8_condition:
+	l	%r1,204(%r11)
+	c	%r1,588(%r11)				# compare j and second number len
+	jl	.inner_loop8_body
+	asi	200(%r11),1					# i++
+.check_outer_loop8_condition:
+	l	%r1,200(%r11)
+	c	%r1,176(%r11)				# compare i and first number len
+	jl	.outer_loop8_body
+	aghik	%r1,%r11,216
+	lg	%r3,208(%r11)
+	lgr	%r2,%r1
+	brasl	%r14,normalize_array	# normalize array
+	l	%r1,192(%r11)
+	lgfr	%r2,%r1
+	aghik	%r1,%r11,216
+	lgr	%r3,%r2
+	lgr	%r2,%r1
+	brasl	%r14,reverse_array		# reverse array
+	l	%r2,180(%r11)
+	ms	%r2,164(%r11)				# fix output sign
+	lgfr	%r4,%r2
+	l	%r1,192(%r11)
+	lgfr	%r3,%r1
+	aghik	%r2,%r11,216
+	brasl	%r14,print_array		# print
+	lmg	%r11,%r15,512(%r11)
+	br	%r14
+
 
 print_array:
 	stmg	%r11,%r15,88(%r15)
@@ -736,113 +822,6 @@ subtract_first_element_from_second:
 	brasl	%r14,normalize_array
 	nopr	%r0
 	lmg	%r11,%r15,288(%r11)
-	br	%r14
-
-multiple:
-
-	stmg	%r11,%r15,88(%r15)
-	lay	%r15,-424(%r15)
-	lgr	%r11,%r15
-	stg	%r2,184(%r11)
-	lgr	%r1,%r3
-	lgr	%r3,%r4
-	stg	%r5,168(%r11)
-	lgr	%r2,%r6
-	st	%r1,180(%r11)
-	lr	%r1,%r3
-	st	%r1,176(%r11)
-	lr	%r1,%r2
-	st	%r1,164(%r11)
-	ear	%r1,%a0
-	sllg	%r1,%r1,32
-	ear	%r1,%a1
-	mvc	416(8,%r11),40(%r1)
-	l	%r1,176(%r11)
-	a	%r1,588(%r11)
-	ahi	%r1,1
-	st	%r1,192(%r11)
-	la	%r1,192(%r11)
-	stg	%r1,208(%r11)
-	mvhi	196(%r11),0
-	j	.L69
-.L70:
-	lgf	%r1,196(%r11)
-	sllg	%r1,%r1,1
-	la	%r1,216(%r1,%r11)
-	mvhhi	0(%r1),0
-	asi	196(%r11),1
-.L69:
-	l	%r1,196(%r11)
-	chi	%r1,99
-	jle	.L70
-	mvhi	200(%r11),0
-	j	.L71
-.L74:
-	mvhi	204(%r11),0
-	j	.L72
-.L73:
-	l	%r1,200(%r11)
-	a	%r1,204(%r11)
-	lgfr	%r1,%r1
-	sllg	%r1,%r1,1
-	lh	%r1,216(%r1,%r11)
-	lr	%r2,%r1
-	lgf	%r1,200(%r11)
-	sllg	%r1,%r1,1
-	ag	%r1,184(%r11)
-	lh	%r1,0(%r1)
-	lr	%r3,%r1
-	lgf	%r1,204(%r11)
-	sllg	%r1,%r1,1
-	ag	%r1,168(%r11)
-	lh	%r1,0(%r1)
-	msr	%r1,%r3
-	ar	%r1,%r2
-	lr	%r2,%r1
-	l	%r1,200(%r11)
-	a	%r1,204(%r11)
-	lgfr	%r1,%r1
-	sllg	%r1,%r1,1
-	sth	%r2,216(%r1,%r11)
-	asi	204(%r11),1
-.L72:
-	l	%r1,204(%r11)
-	c	%r1,588(%r11)
-	jl	.L73
-	asi	200(%r11),1
-.L71:
-	l	%r1,200(%r11)
-	c	%r1,176(%r11)
-	jl	.L74
-	aghik	%r1,%r11,216
-	lg	%r3,208(%r11)
-	lgr	%r2,%r1
-	brasl	%r14,normalize_array
-	l	%r1,192(%r11)
-	lgfr	%r2,%r1
-	aghik	%r1,%r11,216
-	lgr	%r3,%r2
-	lgr	%r2,%r1
-	brasl	%r14,reverse_array
-	l	%r1,192(%r11)
-	l	%r2,180(%r11)
-	ms	%r2,164(%r11)
-	lgfr	%r3,%r2
-	lgfr	%r2,%r1
-	aghik	%r1,%r11,216
-	lgr	%r4,%r3
-	lgr	%r3,%r2
-	lgr	%r2,%r1
-	brasl	%r14,print_array
-	nopr	%r0
-	ear	%r1,%a0
-	sllg	%r1,%r1,32
-	ear	%r1,%a1
-	clc	416(8,%r11),40(%r1)
-	je	.L75
-	brasl	%r14,__stack_chk_fail
-.L75:
-	lmg	%r11,%r15,512(%r11)
 	br	%r14
 
 divide:

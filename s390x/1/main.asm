@@ -1,888 +1,1046 @@
-segment .data
-	string: db	"%d"
-segment .text
-segment .text
-	extern printf
-    extern puts
-    extern scanf
-    extern getchar
-	extern putchar
-	global asm_main
+.data
+string: .asciz	"%d"
+.text
+.globl asm_main
+
+
 
 asm_main:
-	push	rbp						; 
-	mov	rbp, rsp					;
-	sub	rsp, 480					; set rsp and rbp
-.check_loop_condition:
-	call	getchar					; get character and send it on rax
-	mov	BYTE -465[rbp], al			; save character on -465[rbp]; operand = -465[rbp]
-	cmp	BYTE -465[rbp], 113			; compare operand with 'q'
-	jne	.loop_body
-	leave
-	ret
-.loop_body:
-	mov	DWORD -464[rbp], 1			; -464[rbp] = first number sign = 1
-	mov	DWORD -456[rbp], 1			; -456[rbp] = second number sign  = 1
-	lea	rax, -464[rbp]				; rax = address(-464[rbp]) = address(first number sign)
-	mov	QWORD -448[rbp], rax		; -448[rbp] = rax =  address(first number sign)
-	lea	rax, -460[rbp]				; rax = address(-460[rbp]) = address(first number lentgh)
-	mov	QWORD -440[rbp], rax		; -440[rbp] = rax =  address(first number lentgh)
-	lea	rax, -456[rbp]				; rax = address(-456[rbp]) = address(second number sign)
-	mov	QWORD -432[rbp], rax		; -432[rbp] = rax =  address(second number sign)
-	lea	rax, -452[rbp]				; rax = address(-452[rbp]) = address(second number lentgh)
-	mov	QWORD -424[rbp], rax		; -424[rbp] = rax =  address(second number lentgh)
-	call	getchar					; get blank line bitween operand and numbers
-	mov	rdx, QWORD -440[rbp]		; 3rd parameter of get_number = address(first number lentgh)				
-	mov	rsi, QWORD -448[rbp]		; 2nd parameter of get_number = address(first number sign)
-	lea	rdi, -416[rbp]				; 1st parameter of get_number = address(first number array[0]) = -416[rbp]
-	call	get_number				; initialize first number; first number[i] = [-416[rbp] + 2 * i]
-	mov	rdx, QWORD -424[rbp]		; 3rd parameter of get_number = address(second number lentgh)
-	mov	rsi, QWORD -432[rbp]		; 2nd parameter of get_number = address(second number sign)
-	lea	rdi, -208[rbp]				; 1st parameter of get_number = address(second number array[0]) = -208[rbp]
-	call	get_number				; initialize first number; first number[i] = [-208[rbp] + 2 * i]
-	mov	r9, QWORD -452[rbp]			; 6th parameter of function = second number lentgh
-	mov	r8, QWORD -456[rbp]			; 5th parameter of function = second number sign
-	lea	rcx, -208[rbp]				; 4th parameter of function = address(second number array[0])
-	mov	rdx, QWORD -460[rbp]		; 3rd parameter of function = first number lentgh
-	mov	rsi, QWORD -464[rbp]		; 2nd parameter of function = first number sign
-	lea	rdi, -416[rbp]				; 1st parameter of function = address(first number array[0])
-	cmp	BYTE -465[rbp], 43			; compare -465[rbp] = operand with '+'
-	jne	.continue_loop_body1						
-.add_numbers:
-	call	add						; add numbers and print result
-	jmp	.check_loop_condition		; continue loop
-.continue_loop_body1:
-	cmp	BYTE -465[rbp], 45			; compare -465[rbp] = operand with '-'
-	jne	.continue_loop_body2		; continue loop body
-	call	subtract				; subtract numbers and print result
-	jmp	.check_loop_condition		; continue loop
-.continue_loop_body2:
-	cmp	BYTE -465[rbp], 120			; compare -465[rbp] = operand with 'x'
-	jne	.continue_loop_body3		; continue loop body
-.mutiple_numbers:
-	call	multiple				; multiple numbers and print result
-	jmp	.check_loop_condition		; continue loop
-.continue_loop_body3:
-	cmp	BYTE -465[rbp], 47			; compare -465[rbp] = operand with '/'
-	jne	.check_loop_condition		; character was'nt equal to any operand. back to loop condition
-.divide_numbers:
-	call	divide					; divide numbers and print result
-	jmp	.check_loop_condition		; continue loop
-
+	stmg	%r6,%r15,48(%r15)					# store return address
+	lay	%r15,-632(%r15)							# create enough space for srore
+	lgr	%r11,%r15								# r11 = r15
+	j	.check_loop1_condition
+.loop1_body_1:
+	mvhi	176(%r11),1						# 176(%r11) = first number sign
+	mvhi	184(%r11),1						# 184(%r11) = second number sign
+	la	%r1,176(%r11)
+	stg	%r1,192(%r11)						# 192(%r11) = address(first number sign)
+	la	%r1,180(%r11)						# 180(%r11) = first number len
+	stg	%r1,200(%r11)						# 200(%r11) = address(first number len)
+	la	%r1,184(%r11)
+	stg	%r1,208(%r11)						# 208(%r11) = address(second number sign)
+	la	%r1,188(%r11)						# 188(%r11) = second number len
+	stg	%r1,216(%r11)						# 216(%r11) = address(second number len)
+	brasl	%r14,getchar					# get '\n'
+	aghik	%r1,%r11,224					# 224(%r11) = address(first number[0])
+	lg	%r4,200(%r11)						# 3rd parameter get number = address(first number len)
+	lg	%r3,192(%r11)						# 2nd parameter get number = address(first number sign)
+	lgr	%r2,%r1								# 1st parameter get number = address(first number[0])
+	brasl	%r14,get_number
+	aghik	%r1,%r11,424					# 424(%r11) = address(first number[0])
+	lg	%r4,216(%r11)						# 3rd parameter get number = address(second number len)
+	lg	%r3,208(%r11)						# 2nd parameter get number = address(second number sign)
+	lgr	%r2,%r1								# 1st parameter get number = address(second number[0])
+	brasl	%r14,get_number
+	l	%r1,188(%r11)
+	lgfr	%r1,%r1
+	stg	%r1,160(%r15)						# 6th parameter func = second number len
+	lr %r7, %r1
+	aghik	%r0,%r11,184					
+	lgr	%r6,%r0								# 5th parameter func = second number sign
+	aghik	%r5,%r11,424					# 4th parameter func = address(second number[0])
+	l	%r4,180(%r11)
+	lgfr	%r4,%r4							# 3rd parameter func = first number len
+	aghik	%r3,%r11,176					# 2nd parameter func = first number sign
+	aghik	%r2,%r11,224					# 1st parameter func = address(first number[0])
+	j .check_is_add
+.check_is_add:
+	llc	%r1,175(%r11)
+	chi	%r1,43								# compare character and '+'
+	jne	.check_is_sub
+	brasl	%r14,add
+	j	.check_loop1_condition
+.check_is_sub:
+	llc	%r1,175(%r11)
+	chi	%r1,45								# compare character and '-'
+	jne	.check_is_multiple
+	brasl	%r14,subtract
+	j	.check_loop1_condition
+.check_is_multiple:
+	llc	%r1,175(%r11)
+	chi	%r1,120								# compare character and 'x'
+	jne	.check_is_divide
+	brasl	%r14,multiple
+	j	.check_loop1_condition
+.check_is_divide:
+	llc	%r1,175(%r11)
+	chi	%r1,47								# compare character and '/'
+	jne	.check_loop1_condition
+	brasl	%r14,divide
+.check_loop1_condition:
+	brasl	%r14,getchar
+	lgr	%r1,%r2
+	stc	%r1,175(%r11)						# 175(%r11) = character that is equal to operand
+	chi	%r1,113								# compare character and 'q'
+	jne	.loop1_body_1
+	lmg	%r6,%r15,680(%r11)
+	br	%r14
 
 add:
-									; print add of two number
-	push	rbp						;
-	mov	rbp, rsp					;
-	sub	rsp, 736					; set rbp and rsp
-	lea	rax, -688[rbp]				; -688[rbp] = bigger number lentgh
-	mov	QWORD -664[rbp], rax		; -664[rbp] = address(bigger number lentgh)
-	lea	rax, -680[rbp]				; -680[rbp] = smaller number lentgh
-	mov	QWORD -656[rbp], rax		; -656[rbp] = address(smaller number lentgh)
-	lea	rax, -684[rbp]				; -684[rbp] = bigger number sign
-	mov	QWORD -648[rbp], rax		; -648[rbp] = address(bigger number sign)
-	lea	rax, -676[rbp]				; -676[rbp] = smaller number sign
-	mov	QWORD -640[rbp], rax		; -640[rbp] = address(smaller number sign)
-	push	QWORD -656[rbp]			; 12th parameter of set_small_and_big_number = address(smaller number lentgh)
-	push	QWORD -640[rbp]			; 11th parameter of set_small_and_big_number = address(smaller number sign)
-	lea	rax, -208[rbp]				; rax = -208[rbp] = smaller number[0]
-	push	rax						; 10th parameter of set_small_and_big_number = rax = address(smaller number[0])
-	push	QWORD -664[rbp]			; 9th parameter of set_small_and_big_number = address(bigger number lentgh)
-	push	QWORD -648[rbp]			; 8th parameter of set_small_and_big_number = address(bigger number sign)
-	lea	rax, -416[rbp]				; rax = -416[rbp] = bigger number[0]	
-	push	rax						; 7th parameter of set_small_and_big_number = rax = address(bigger number[0])
-									; first six parameter of set_small_and_big_number is equal to add function so don't change them
-	call	set_small_and_big_number; bigger number = max(first number, second number), smaller number = min(first number, second number), ...
-	add	rsp, 48						; in place of pushes for set_small_and_big_number
-	mov	eax, DWORD -684[rbp]		; eax = bigger number sign
-	cmp	eax, DWORD -676[rbp]		; compare signs of numbers equal or not, -676[rbp] = smaller number sign
-	jne	.signs_are_differnt
-.signa_are_same:
-	mov	DWORD -668[rbp], 0			; -668[rbp] is temp value of loop
-	jmp	.check_loop_condition2
-.loop_body2:
-	mov	eax, DWORD -668[rbp]
-	cdqe
-	movzx	eax, WORD -416[rbp+rax*2]
-	mov	edx, eax					; edx = bigger number[i]
-	mov	eax, DWORD -668[rbp]
-	cdqe
-	movzx	eax, WORD -208[rbp+rax*2]	; eax = smaller number[i]
-	add	eax, edx
-	mov	edx, eax
-	mov	eax, DWORD -668[rbp]
-	cdqe
-	mov	WORD -416[rbp+rax*2], dx	; bigger number[i] = smaller number[i] + bigger number[i]
-	add	DWORD -668[rbp], 1
-.check_loop_condition2:
-	mov	eax, DWORD -680[rbp]
-	cmp	DWORD -668[rbp], eax		; compare temp value of loop and smaller number lentgh
-	jl	.loop_body2	
-.normalizing_number:
-	mov	rsi, QWORD -664[rbp]		; 2nd parameter of normalize array = address(bigger number lentgh)
-	lea	rdi, -416[rbp]				; 1st parameter of normalize array = address(bigger number[0])
-	call	normalize_array
-.reverse:
-	mov	esi, DWORD -688[rbp]		; 2nd parameter of raverse array = bigger number lentgh
-	lea	rdi, -416[rbp]				; 1st parameter of reverse array = address(bigger number[0])
-	call	reverse_array
-.print:
-	mov	edx, DWORD -684[rbp]		; 3rd parameter of print array = bigger number sign
-	mov	esi, DWORD -688[rbp]		; 2nd parameter of print array = bigger number lentgh
-	lea	rdi, -416[rbp]				; 1st parameter of print array = address(bigger number[0])
-	call	print_array
-	jmp	.add_end
-.signs_are_differnt:
-	mov	r8d, 0						; 5th parameter of subtract_first_element_from_second = 0
-	mov	ecx, DWORD -680[rbp]		; 4th parameter of subtract_first_element_from_second = smaller number lentgh
-	lea	rdx, -208[rbp]				; 3rd parameter of subtract_first_element_from_second = address(smaller number[0])
-	mov	rsi, QWORD -664[rbp]		; 2nd parameter of subtract_first_element_from_second = address(bigger number lentgh)
-	lea	rdi, -416[rbp]				; 1st parameter of subtract_first_element_from_second = address(bigger number[0])
-	call	subtract_first_element_from_second
-	mov	esi, DWORD -688[rbp]		; 2nd parameter of raverse array = bigger number lentgh
-	lea	rdi, -416[rbp]				; 1st parameter of reverse array = address(bigger number[0])
-	call	reverse_array
-	mov	edx, DWORD -684[rbp]		; 3rd parameter of print array = bigger number sign
-	mov	esi, DWORD -688[rbp]		; 2nd parameter of print array = bigger number lentgh
-	lea	rdi, -416[rbp]				; 1st parameter of print array = address(bigger number[0])
-	call	print_array
+	stmg	%r6,%r15,48(%r15)
+	lay	%r15,-928(%r15)
+	lgr	%r11,%r15							# set registers
+	stg	%r2,240(%r11)						# 240(%r11) = address(first number[0])
+	lgr	%r1,%r3
+	lgr	%r3,%r4
+	stg	%r5,224(%r11)						# 224(%r11) = address(second number[0])
+	st	%r1,236(%r11)						# 236(%r11) = first number sign
+	lr	%r1,%r3
+	st	%r1,232(%r11)						# 232(%r11) = first number len
+	st	%r6,220(%r11)						# 220(%r11) = second number sign
+	la	%r1,256(%r11)						# 256(%r11) = bigger number len
+	stg	%r1,280(%r11)						# 280(%r11) = address(bigger number len)
+	la	%r1,264(%r11)						# 264(%r11) = smaller number len				
+	stg	%r1,288(%r11)						# 288(%r11) = address(smaller number len)
+	la	%r1,260(%r11)
+	stg	%r1,296(%r11)
+	la	%r1,268(%r11)
+	stg	%r1,304(%r11)
+	lg	%r1,288(%r11)
+	stg	%r1,208(%r11)						# 208(%r11) = address(smaller number len)
+	lg	%r1,304(%r11)
+	stg	%r1,200(%r11)
+	la	%r1,720(%r11)						# 720(%r11) = smaller number[0]
+	stg	%r1,192(%r11)						# 192(%r11) = address(smaller number[0])
+	lg	%r1,280(%r11)
+	stg	%r1,184(%r11)
+	lg	%r1,296(%r11)
+	stg	%r1,176(%r11)
+	la	%r1,520(%r11)						# 520(%r11) = bigger number[0]
+	stg	%r1,168(%r11)						# 168(%r11) = address(bigger number[0])
+	lr	%r1,%r7								# 1092(%r11) = second number len
+	stg	%r1,160(%r11)						# 160(%r11) = second number len
+	lgf	%r6,220(%r11)						# 5th parameter func = second number sign
+	lg	%r5,224(%r11)						# 4th parameter func = address(second number[0])
+	lgf	%r4,232(%r11)						# 3th parameter func = first number len
+	lgf	%r3,236(%r11)						# 2th parameter func = first number sign
+	lg	%r2,240(%r11)						# 1st parameter func = address(first number[0])
+	brasl	%r14,set_small_and_big_number
+	la	%r1,256(%r11)
+	stg	%r1,312(%r11)						# 312(%r11) = address(bigger number len)
+	l	%r1,256(%r11)
+	lgfr	%r1,%r1
+	sllg	%r1,%r1,1						# 320(%r11) = address(output[0])
+	la	%r1,320(%r1,%r11)
+	mvhhi	0(%r1),0						# output[bigger number len] = 0
+	l	%r1,236(%r11)
+	c	%r1,220(%r11)						# compare first and second number sign
+	# jne	.signs_isnt_equal					# TODO: problem
+	mvhi	272(%r11),0						# 272(%r11) = loop2 temp number = i
+	j	.check_loop2_condition
+.loop2_body:
+	lgf	%r1,272(%r11)
+	sllg	%r1,%r1,1
+	lh	%r2,520(%r1,%r11)					# %r2 = bigger number[i]
+	sth	%r2,320(%r1,%r11)					# output[i] = bigger number[i]
+	asi	272(%r11),1							# i++
+.check_loop2_condition:
+	l	%r2,256(%r11)
+	l	%r1,272(%r11)
+	cr	%r1,%r2								# compare i and bigger number len
+	jl	.loop2_body
+	mvhi	276(%r11),0						# 276(%r11) = loop3 temp number = i
+	j	.check_loop3_condition
+.loop3_body:
+	lgf	%r1,276(%r11)
+	sllg	%r1,%r1,1
+	lh	%r2,320(%r1,%r11)					# %r2 = output[i]
+	lh	%r3,720(%r1,%r11)					# %r3 = smaller number[i]				
+	ar	%r2,%r3								# 
+	sth	%r2,320(%r1,%r11)					# output[i] += smaller number[i]
+	asi	276(%r11),1							# i++
+.check_loop3_condition:
+	l	%r2,264(%r11)
+	l	%r1,276(%r11)
+	cr	%r1,%r2								# compare i and smaller number len
+	jl	.loop3_body
+	lg	%r3,312(%r11)						# 2nd parameter func = address(output len)
+	aghik	%r2,%r11,320					# 1st parameter func = address(output[0])
+	brasl	%r14,normalize_array
+	l	%r3,256(%r11)						
+	lgfr	%r3,%r3							# 2nd parameter func = bigger number len
+	aghik	%r2,%r11,320					# 1st parameter func = address(output[0])
+	brasl	%r14,reverse_array
+	l	%r3,256(%r11)
+	lgfr	%r3,%r3							# 2nd parameter func = address(bigger number len)
+	lgf	%r4,236(%r11)						# 3rd parameter func = address(bigger number sign)
+	aghik	%r2,%r11,320					# 1st parameter func = address(output[0])
+	brasl	%r14,print_array
+	j	.add_end
+.signs_isnt_equal:
+	
+	lghi	%r6,0							# 5th parameter func = 0
+	l	%r5,264(%r11)
+	lgfr	%r5,%r5							
+	lgr	%r5,%r5								# 4th parameter func = smaller number len
+	aghik	%r4,%r11,720					# 3rd parameter func = address(smaller number[0])
+	lg	%r3,280(%r11)						# 2nd parameter func = address(bigger number len)
+	aghik	%r2,%r11,520					# 1st parameter func = address(bigger number[0])
+	brasl	%r14,subtract_first_element_from_second
+	l	%r3,256(%r11)
+	lgfr	%r3,%r3							# 2nd parameter func = bigger number len
+	aghik	%r2,%r11,520					# 1st parameter func = address(bigger number[0])
+	brasl	%r14,reverse_array
+	l	%r4,260(%r11)
+	lgfr	%r4,%r4							# 3rd parameter func = bigger number len
+	l	%r3,256(%r11)
+	lgfr	%r3,%r3							# 2nd parameter func = bigger number len
+	aghik	%r2,%r11,520					# 1st parameter func = address(bigger number[0])
+	brasl	%r14,print_array
 .add_end:
-	leave
-	ret
-
-subtract:
-	push	rbp						;
-	mov	rbp, rsp					; 
-	sub	rsp, 8						; set rsp and rbp
-	neg	r8d							; negate second number sign
-	call	add						; add a + (-b) and print
-	leave
-	ret
-
-multiple:
-	push	rbp
-	mov	rbp, rsp
-	sub	rsp, 272
-	mov	QWORD -248[rbp], rdi		; 1st parameter of function = -248[rbp] = address(first number array[0])
-	mov	DWORD -252[rbp], esi		; 2nd parameter of function = -252[rbp] = first number sign
-	mov	DWORD -256[rbp], edx		; 3rd parameter of function = -256[rbp] = first number lentgh
-	mov	QWORD -264[rbp], rcx		; 4th parameter of function = -264[rbp] = address(second number array[0])
-	mov	DWORD -268[rbp], r8d		; 5th parameter of function = -268[rbp] = second number sign
-	mov	DWORD -272[rbp], r9d		; 6th parameter of function = -272[rbp] = second number lentgh
-	mov	eax, DWORD -272[rbp]
-	add	eax, edx
-	add	eax, 1
-	mov	DWORD -232[rbp], eax		; -232[rbp] = output lentgh = first number lentgh + second number lentgh
-	lea	rax, -232[rbp]
-	mov	QWORD -216[rbp], rax		; -216[rbp] = address(output lentgh)
-	mov	DWORD -228[rbp], 0			; -228[rbp] = loop temp number = i
-	jmp	.check_loop_condition3
-.loop_body3:						; -208[rbp] = address(output number[0])
-	mov	eax, DWORD -228[rbp]		; 
-	cdqe
-	mov	WORD -208[rbp+rax*2], 0		; output number[i] = 0
-	add	DWORD -228[rbp], 1			; i++
-.check_loop_condition3:
-	cmp	DWORD -228[rbp], 99			; compare i , 99
-	jle	.loop_body3
-.next_loop:							; this loop has inner loop
-	mov	DWORD -224[rbp], 0			; -224[rbp] = outer loop temp number = i
-	jmp	.check_outer_loop_condition
-.inner_loop:						; this loop is in the above loop
-	mov	DWORD -220[rbp], 0			; -220[rbp] = inner loop temp number = j
-	jmp	.check_inner_loop_condition
-.inner_loop_body:
-	mov	edx, DWORD -224[rbp]
-	mov	eax, DWORD -220[rbp]
-	add	eax, edx
-	cdqe
-	movzx eax, WORD -208[rbp + rax * 2]	; eax = output[i + j]
-	mov	esi, eax					; esi = output[i + j]
-	mov	eax, DWORD -224[rbp]
-	cdqe
-	lea	rdx, [rax + rax]
-	mov	rax, QWORD -248[rbp]
-	add	rax, rdx
-	movzx	eax, WORD [rax]			; eax = first number[i]
-	mov	ecx, eax					; ecx = first number[i]
-	mov	eax, DWORD -220[rbp]
-	cdqe
-	lea	rdx, [rax + rax]
-	mov	rax, QWORD -264[rbp]
-	add	rax, rdx
-	movzx	eax, WORD [rax]			; eax = second number[i]
-	imul	eax, ecx				; rax = first number[i] * second number[i]
-	lea	ecx, [rsi + rax]
-	mov	edx, DWORD -224[rbp]
-	mov	eax, DWORD -220[rbp]
-	add	eax, edx
-	mov	edx, ecx
-	cdqe
-	mov	WORD -208[rbp+rax*2], dx	; output number[i + j] = first number[i] * second number[i]
-	add	DWORD -220[rbp], 1			; j++
-.check_inner_loop_condition:
-	mov	eax, DWORD -220[rbp]
-	cmp	eax, DWORD -272[rbp]		; compare j , second number lentgh
-	jl	.inner_loop_body
-	add	DWORD -224[rbp], 1			; i++
-.check_outer_loop_condition:
-	mov	eax, DWORD -224[rbp]
-	cmp	eax, DWORD -256[rbp]		; compare i , first number lentgh
-	jl	.inner_loop
-	mov	rsi, QWORD -216[rbp]		; 2nd parameter of normalize array = address(output number lentgh)
-	lea	rdi, -208[rbp]				; 1st parameter of normalize array = address(output number[0])
-	call	normalize_array
-	mov	esi, DWORD -232[rbp]		; 2nd parameter of raverse array = address(output number lentgh)
-	lea	rdi, -208[rbp]				; 1st parameter of reverse array = address(output number[0])
-	call	reverse_array
-	mov	eax, DWORD -252[rbp]
-	imul	eax, DWORD -268[rbp]	; eax = first number sign * second number sign
-	mov	edx, eax					; 3rd parameter of print array = output number sign = first number sign * second number sign
-	mov	esi, DWORD -232[rbp]		; 2nd parameter of print array = output number lentgh
-	lea	rdi, -208[rbp]				; 1st parameter of print array = address(output number[0])
-	call	print_array
-	leave
-	ret
-
-divide:
-	push	rbp
-	mov	rbp, rsp
-	sub	rsp, 276					; set rsp and rbp
-	mov	QWORD -248[rbp], rdi		; 1st parameter of function = -248[rbp] = address(first number array[0])
-	mov	DWORD -252[rbp], esi		; 2nd parameter of function = -252[rbp] = first number sign
-	mov	DWORD -256[rbp], edx		; 3rd parameter of function = -256[rbp] = first number lentgh
-	mov	QWORD -264[rbp], rcx		; 4th parameter of function = -264[rbp] = address(second number array[0])
-	mov	DWORD -268[rbp], r8d		; 5th parameter of function = -268[rbp] = second number sign
-	mov	DWORD -272[rbp], r9d		; 6th parameter of function = -272[rbp] = second number lentgh
-	mov DWORD -276[rbp], edx		; copy of first number lentgh
-	mov	DWORD -236[rbp], 0			; loop temp number = i
-	jmp	.check_loop_condition4
-.loop_body4:
-	mov	eax, DWORD -236[rbp]
-	cdqe
-	mov	WORD -208[rbp+rax*2], 0		; output number[i] = 0
-	add	DWORD -236[rbp], 1			; i++
-.check_loop_condition4:
-	cmp	DWORD -236[rbp], 99
-	jle	.loop_body4
-	lea	rax, -256[rbp]
-	mov	QWORD -224[rbp], rax		; -224[rbp] = address(first number lentgh)
-	jmp	.check_loop_condition5
-.loop_body5:
-	mov	eax, DWORD -256[rbp]
-	sub	eax, DWORD -272[rbp]
-	sub	eax, 1
-	cdqe
-	movzx	eax, WORD -208[rbp + rax * 2]	; eax = output number[first number lentgh - second number lentgh - 1]
-	lea	edx, 1[rax]					; edx = rax + 1
-	mov	eax, DWORD -256[rbp]
-	sub	eax, DWORD -272[rbp]
-	sub	eax, 1
-	cdqe
-	mov	WORD -208[rbp + rax * 2], dx	; output number[first number lentgh - second number lentgh - 1] += 1
-	mov	eax, DWORD -256[rbp]
-	sub	eax, DWORD -272[rbp]
-	lea	r8d, -1[rax]				; 5th parameter of subtract_first_element_from_second = first number lentgh - second number lentgh - 1
-	mov	ecx, DWORD -272[rbp]		; 4th parameter of subtract_first_element_from_second = second number lentgh
-	mov	rdx, QWORD -264[rbp]		; 3rd parameter of subtract_first_element_from_second = address(second number[0])
-	mov	rsi, QWORD -224[rbp]		; 2nd parameter of subtract_first_element_from_second = address(first number lentgh)
-	mov	rdi, QWORD -248[rbp]		; 1st parameter of subtract_first_element_from_second = address(first number[0])
-	call	subtract_first_element_from_second
-.check_loop_condition5:
-	mov	eax, DWORD -256[rbp]
-	cmp	DWORD -272[rbp], eax		; compare second number lentgh with first number lentgh
-	jl	.loop_body5
-	jmp	.check_loop_condition6		; now second number lentgh with first number lentgh
-.loop_body6:
-	movzx	eax, WORD -208[rbp]		; eax = output number[0]
-	cdqe
-	lea	edx, 1[rax]					; edx = output number[0] + 1
-	cdqe
-	mov	WORD -208[rbp], dx			; output number[0] += 1
-	mov	r8d, 0						; 5th parameter of subtract_first_element_from_second = 0
-	mov	ecx, DWORD -272[rbp]		; 4th parameter of subtract_first_element_from_second = second number lentgh
-	mov	rdx, QWORD -264[rbp]		; 3rd parameter of subtract_first_element_from_second = address(second number[0])
-	mov	rsi, QWORD -224[rbp]		; 2nd parameter of subtract_first_element_from_second = address(first number lentgh)
-	mov	rdi, QWORD -248[rbp]		; 1st parameter of subtract_first_element_from_second = address(first number[0])
-	call	subtract_first_element_from_second
-.check_loop_condition6:
-	mov	eax, DWORD -272[rbp]
-	cdqe
-	add	rax, rax
-	lea	rdx, -2[rax]
-	mov	rax, QWORD -248[rbp]
-	movzx	edx, WORD [rax + rdx]	; edx = first number[second number lentgh - 1]
-	mov	eax, DWORD -272[rbp]
-	cdqe
-	add	rax, rax
-	lea	rcx, -2[rax]
-	mov	rax, QWORD -264[rbp]
-	movzx	eax, WORD [rax + rcx]	; ecx = second number[second number lentgh - 1]
-	cmp	dx, ax
-	jg	.loop_body6
-	movzx	eax, WORD -208[rbp]
-	add	eax, 1
-	mov	WORD -208[rbp], ax			; output number[0] += 1
-	mov	eax, DWORD -272[rbp]
-	sub	eax, 1
-	mov	DWORD -232[rbp], eax		; -232[rbp] = temp number of loop = second number lentgh - 1
-	jmp	.heck_loop_condition7
-.loop_body7_1:
-	mov	eax, DWORD -232[rbp]
-	cdqe
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -264[rbp]
-	add	rax, rdx
-	movzx	edx, WORD [rax]			; edx = second number[i]
-	mov	eax, DWORD -232[rbp]
-	cdqe
-	lea	rcx, [rax+rax]
-	mov	rax, QWORD -248[rbp]
-	add	rax, rcx
-	movzx	eax, WORD [rax]			; eax = first number[i]
-	cmp	dx, ax
-	jle	.loop_body7_2
-	movzx	eax, WORD -208[rbp]		; -> second number[i] > first number[i]
-	sub	eax, 1
-	mov	WORD -208[rbp], ax			; output number[0] -= 1
-	jmp	.break_loop7
-.loop_body7_2:
-	mov	eax, DWORD -232[rbp]
-	cdqe
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -248[rbp]
-	add	rax, rdx
-	movzx	edx, WORD [rax]			; edx = first number[i]
-	mov	eax, DWORD -232[rbp]
-	cdqe
-	lea	rcx, [rax+rax]
-	mov	rax, QWORD -264[rbp]
-	add	rax, rcx
-	movzx	eax, WORD [rax]			; eax = second number[i]
-	cmp	dx, ax
-	jg	.break_loop7
-	sub	DWORD -232[rbp], 1			; i--
-.heck_loop_condition7:
-	cmp	DWORD -232[rbp], 0			; compare i , 0
-	jns	.loop_body7_1
-.break_loop7:
-	mov	eax, DWORD -276[rbp]
-	sub eax, DWORD -272[rbp]
-	add	eax, 1
-	mov	DWORD -240[rbp], eax		; eax = first number lentgh - second number lentgh + 1
-	lea	rax, -240[rbp]
-	mov	QWORD -216[rbp], rax		; -216[rbp] = address(output number lentgh)
-	mov	rsi, QWORD -216[rbp]		; 2nd parameter of normalize array = address(output number lentgh)
-	lea	rdi, -208[rbp]				; 1st parameter of normalize array = address(output number[0])
-	call	normalize_array
-	mov	esi, DWORD -240[rbp]		; 2nd parameter of raverse array = address(output number lentgh)
-	lea	rdi, -208[rbp]				; 1st parameter of reverse array = address(output number[0])
-	call	reverse_array
-	mov	eax, DWORD -252[rbp]
-	imul	eax, DWORD -268[rbp]	; eax = first number sign * second number sign
-	mov	edx, eax					; 3rd parameter of print array = output number sign = first number sign * second number sign
-	mov	esi, DWORD -240[rbp]		; 2nd parameter of print array = output number lentgh
-	lea	rdi, -208[rbp]				; 1st parameter of print array = address(output number[0])
-	call	print_array
-	leave
-	ret
-
-print_array:
-	push	rbp						;
-	mov	rbp, rsp					;
-	sub	rsp, 32						; set rsp and rbp
-	mov	QWORD -24[rbp], rdi			; -24[rbp] = address(output[0])
-	mov	DWORD -28[rbp], esi			; -28[rbp] = output number lentgh
-	mov	DWORD -32[rbp], edx			; -32[rbp] = output number sign
-	cmp	DWORD -28[rbp], 1			; compare sign and 1
-	jne	.check_if_negative_print_negative
-	mov	rax, QWORD -24[rbp]
-	movzx	eax, WORD [rax]			; eax = output[0]
-	cmp	ax, 0
-	jne	.check_if_negative_print_negative
-	mov	DWORD -32[rbp], 1			; lentgh = 1 and output[0] = 0 -> sign = 1. prevent print '-0'
-.check_if_negative_print_negative:
-	cmp	DWORD -32[rbp], -1
-	jne	.print_loop
-	mov	edi, 45						; sign == -1 -> print(-)
-	call	putchar
-.print_loop:
-	mov	DWORD -4[rbp], 0			; -4[rbp] = loop temp number  = i
-	jmp	.check_print_loop_condition
-.print_loop_body:
-	mov	eax, DWORD -4[rbp]
-	cdqe
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -24[rbp]
-	add	rax, rdx
-	movzx	eax, WORD [rax]			; eax = output[i]
-	mov	esi, eax
-	lea	rax, string
-	mov	rdi, rax
-	mov	eax, 0
-	call	printf					; print output[i]
-	add	DWORD -4[rbp], 1			; i++
-.check_print_loop_condition:
-	mov	eax, DWORD -4[rbp]
-	cmp	eax, DWORD -28[rbp]			; compare i and lentgh
-	jl	.print_loop_body
-	mov	edi, 10
-	call	putchar					; print new line
-	leave
-	ret
-
-reverse_array:
-	push	rbp						;
-	mov	rbp, rsp					; set rbp and rsp
-	mov	QWORD -24[rbp], rdi			; -24[rbp] = address(input[0])
-	mov	DWORD -28[rbp], esi			; -28[rbp] = input number lentgh
-	mov	DWORD -4[rbp], 0			; -4[rbp] = loop temp number = i
-	jmp	.check_loop_condition8
-.loop_body8:
-	mov	eax, DWORD -4[rbp]
-	cdqe
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -24[rbp]
-	add	rax, rdx
-	movzx	eax, WORD [rax]			; eax = input[i]
-	mov	WORD -6[rbp], ax			; -6[rbp] = input[i]
-	mov	eax, DWORD -28[rbp]
-	sub	eax, DWORD -4[rbp]			; eax = lentgh - i
-	cdqe
-	add	rax, rax
-	lea	rdx, -2[rax]
-	mov	rax, QWORD -24[rbp]
-	add	rax, rdx
-	mov	edx, DWORD -4[rbp]
-	movsx	rdx, edx
-	lea	rcx, [rdx+rdx]
-	mov	rdx, QWORD -24[rbp]
-	add	rdx, rcx
-	movzx	eax, WORD [rax]			; eax = input[lentgh - i - 1]
-	mov	WORD [rdx], ax				; [rdx] = input[i] = input[lentgh - i - 1]
-	mov	eax, DWORD -28[rbp]
-	sub	eax, DWORD -4[rbp]
-	cdqe
-	add	rax, rax
-	lea	rdx, -2[rax]
-	mov	rax, QWORD -24[rbp]
-	add	rdx, rax
-	movzx	eax, WORD -6[rbp]
-	mov	WORD [rdx], ax				; [rdx] = input[lentgh - i - 1] = -6[rbp] = input[i]
-	add	DWORD -4[rbp], 1			; i++
-.check_loop_condition8:
-	mov	eax, DWORD -28[rbp]
-	sar	eax, 1						; eax = lentgh / 2
-	cmp	DWORD -4[rbp], eax			; compare i , lentgh / 2
-	jl	.loop_body8
-	pop	rbp
-	ret
-
-get_number:
-	push	rbp
-	mov	rbp, rsp
-	sub	rsp, 48						; set rbp and rsp
-	mov	QWORD -24[rbp], rdi			; -24[rbp] = address(output[0])
-	mov	QWORD -32[rbp], rsi			; -32[rbp] = address(input sign)
-	mov	QWORD -40[rbp], rdx			; -40[rbp] = address(input lentgh)
-	mov	DWORD -4[rbp], 0			; -4[rbp] = temp number of loop = i
-	jmp	.check_loop_condition9
-.loop_body9:
-	mov	eax, DWORD -4[rbp]
-	cdqe
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -24[rbp]			; rax = address(output[0])
-	add	rax, rdx
-	mov	WORD [rax], 0				; output[i] = 0
-	add	DWORD -4[rbp], 1			; i++
-.check_loop_condition9:
-	cmp	DWORD -4[rbp], 99			; compare i and 99
-	jle	.loop_body9
-	mov	DWORD -4[rbp], 0			; -4[rbp] = temp number of loop = i
-	jmp	.check_initialize_loop_condition
-.initialize_number_1:
-	cmp	BYTE -5[rbp], 45			; compare character and '-'
-	jne	.initialize_number_2
-	mov	rax, QWORD -32[rbp]			; rax = address(output sign)
-	mov	DWORD [rax], -1				; [rax] = sign = -1
-	sub	DWORD -4[rbp], 1			; i--
-	jmp	.continue_loop
-.initialize_number_2:
-	movsx	ax, BYTE -5[rbp]		; ax = character
-	lea	ecx, -48[rax]				; ecx = rax - 48. convert charcter number to integer number
-	mov	eax, DWORD -4[rbp]
-	cdqe
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -24[rbp]
-	add	rax, rdx
-	mov	edx, ecx
-	mov	WORD [rax], dx				; output[i] = dx = ecx
-.continue_loop:
-	add	DWORD -4[rbp], 1
-.check_initialize_loop_condition:
-	call	getchar
-	mov	BYTE -5[rbp], al			; input character and save it in -5[rbp]
-	cmp	BYTE -5[rbp], 32			; compare character and ' '
-	je	.set_lentgh_and_reverse
-	cmp	BYTE -5[rbp], 10			; compare character and '\n'
-	jne	.initialize_number_1
-.set_lentgh_and_reverse:
-	mov	rax, QWORD -40[rbp]
-	mov	edx, DWORD -4[rbp]			; edx = -4[rbp] = lentgh
-	mov	DWORD [rax], edx			; [rax] = input lentgh
-	mov	rax, QWORD -40[rbp] 
-	mov	esi, DWORD [rax]			; 2nd parameter of reverse array = address(input lentgh)
-	mov	rdi, QWORD -24[rbp]			; 1st parameter of reverse array = address(input[0])
-	call	reverse_array
-	leave
-	ret
-
-normalize_array:
-	push	rbp
-	mov	rbp, rsp					; set rbp and rsp
-	mov	QWORD -24[rbp], rdi			; -24[rbp] = address(input[0])
-	mov	QWORD -32[rbp], rsi			; -32[rbp] = address(input lentgh)
-	mov	DWORD -8[rbp], 0			; -8[rbp] = loop temp number = i
-	jmp	.check_loop_condition10
-.sign_is_negative:
-	mov	eax, DWORD -8[rbp]
-	cdqe
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -24[rbp]
-	add	rax, rdx
-	movzx	eax, WORD [rax]			; eax = input[i]
-	lea	ecx, 10[rax]				; ecx = eax + 10
-	mov	eax, DWORD -8[rbp]
-	cdqe
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -24[rbp]
-	add	rax, rdx
-	mov	edx, ecx
-	mov	WORD [rax], dx				; input[i] += 10
-	mov	eax, DWORD -8[rbp]
-	cdqe
-	add	rax, 1
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -24[rbp]
-	add	rax, rdx
-	movzx	eax, WORD [rax]			; eax = input[i + 1]
-	lea	ecx, -1[rax]				; ecx = iax - 1
-	mov	eax, DWORD -8[rbp]
-	cdqe
-	add	rax, 1
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -24[rbp]
-	add	rax, rdx
-	mov	edx, ecx
-	mov	WORD [rax], dx				; input[i + 1] -= 1
-.check_negativity_loop:
-	mov	eax, DWORD -8[rbp]
-	cdqe
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -24[rbp]
-	add	rax, rdx
-	movzx	eax, WORD [rax]			; eax = input[i]
-	test	ax, ax					; update SP fucus on ax
-	js	.sign_is_negative
-	jmp	.check_bigger_than9_loop
-.bigger_than9:
-	mov	eax, DWORD -8[rbp]
-	cdqe
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -24[rbp]
-	add	rax, rdx
-	movzx	eax, WORD [rax]			; eax = input[i]
-	lea	ecx, -10[rax]				; ecx = eax - 10
-	mov	eax, DWORD -8[rbp]
-	cdqe
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -24[rbp]
-	add	rax, rdx
-	mov	edx, ecx
-	mov	WORD [rax], dx				; input[i] -= 10
-	mov	eax, DWORD -8[rbp]
-	cdqe
-	add	rax, 1
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -24[rbp]
-	add	rax, rdx
-	movzx	eax, WORD [rax]			; eax = input[i + 1]
-	lea	ecx, 1[rax]					; ecx = input[i + 1] + 1
-	mov	eax, DWORD -8[rbp]
-	cdqe
-	add	rax, 1
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -24[rbp]
-	add	rax, rdx
-	mov	edx, ecx
-	mov	WORD [rax], dx				; input[i + 1] += 1
-	mov	rax, QWORD -32[rbp]
-	mov	eax, DWORD [rax]
-	sub	eax, 1						; eax = lentgh - 1
-	cmp	DWORD -8[rbp], eax			; compare i and lentgh - 1
-	jne	.check_bigger_than9_loop
-	mov	eax, DWORD -8[rbp]
-	cdqe
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -24[rbp]
-	add	rax, rdx
-	movzx	eax, WORD [rax]			; eax = input[i]
-	cmp	ax, 9
-	jg	.check_bigger_than9_loop
-	mov	rax, QWORD -32[rbp]			; in this place i = lentgh - 1 and 0 <= input[i] < 10 so lentgh must be increase
-	mov	eax, DWORD [rax]			; eax = input lentgh
-	lea	edx, 1[rax]
-	mov	rax, QWORD -32[rbp]
-	mov	DWORD [rax], edx			; input lentgh += 1
-.check_bigger_than9_loop:
-	mov	eax, DWORD -8[rbp]
-	cdqe
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -24[rbp]
-	add	rax, rdx
-	movzx	eax, WORD [rax]			; eax = input[i]
-	cmp	ax, 9						; compare input[i] and eax
-	jg	.bigger_than9
-	add	DWORD -8[rbp], 1
-.check_loop_condition10:
-	mov	rax, QWORD -32[rbp]
-	mov	eax, DWORD [rax]			; eax = input lentgh
-	cmp	DWORD -8[rbp], eax			; compare i and lentgh
-	jl	.check_negativity_loop
-	mov	rax, QWORD -32[rbp]
-	mov	eax, DWORD [rax]
-	sub	eax, 1
-	mov	DWORD -4[rbp], eax			; -4[rbp] = loop temp number = i = lentgh - 1
-	jmp	.check_delete_adition_zeros_loop_condition
-.delete_adition_zeros_loop_body:
-	mov	eax, DWORD -4[rbp]
-	cdqe
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -24[rbp]
-	add	rax, rdx
-	movzx	eax, WORD [rax]			; eax = input[i]
-	test	ax, ax
-	jne	.normalize_end
-	mov	rax, QWORD -32[rbp]
-	mov	eax, DWORD [rax]
-	lea	edx, -1[rax]
-	mov	rax, QWORD -32[rbp]
-	mov	DWORD [rax], edx			; lentgh -= 1
-	sub	DWORD -4[rbp], 1
-.check_delete_adition_zeros_loop_condition:
-	cmp	DWORD -4[rbp], 0			; cmpare i and 0
-	jg	.delete_adition_zeros_loop_body
-.normalize_end:
-	pop	rbp
-	ret
+	lmg	%r6,%r15,976(%r11)
+	br	%r14
 
 set_small_and_big_number:
-	push	rbp
-	mov	rbp, rsp
-	sub	rsp, 48						; set rsp and rbp
-	mov	QWORD -24[rbp], rdi			; -24[rbp] = address(first number array[0])
-	mov	DWORD -28[rbp], esi			; -28[rbp] = first number sign
-	mov	DWORD -32[rbp], edx			; -32[rbp] = first number lentgh
-	mov	QWORD -40[rbp], rcx			; -40[rbp] = address(second number array[0])
-	mov	DWORD -44[rbp], r8d			; -44[rbp] = second number sign
-	mov	DWORD -48[rbp], r9d			; -48[rbp] = second number lentgh
-	mov	eax, DWORD -32[rbp]
-	cmp	eax, DWORD -48[rbp]			; compare lentgh of numbers
-	jle	.check_second_is_bigger
-	jmp .first_is_bigger_end
-.check_second_is_bigger:
-	mov	eax, DWORD -48[rbp]
-	cmp	eax, DWORD -32[rbp]
-	jle	.loop_begin
-	jmp .second_is_bigger_end
-.loop_begin:						; in this place first number lentgh = second number lentgh
-	mov	DWORD -4[rbp], 0			; -4[rbp] = loop temp number = i
-	jmp	.check_loop_condition11
-.loop_body11_1:
-	mov	eax, DWORD -32[rbp]
-	sub	eax, DWORD -4[rbp]
-	cdqe
-	add	rax, rax
-	lea	rdx, -2[rax]
-	mov	rax, QWORD -24[rbp]
-	add	rax, rdx
-	movzx	edx, WORD [rax]			; edx = first number[first number lentgh - i - 1]
-	mov	eax, DWORD -32[rbp]
-	sub	eax, DWORD -4[rbp]
-	cdqe
-	add	rax, rax
-	lea	rcx, -2[rax]
-	mov	rax, QWORD -40[rbp]
-	add	rax, rcx
-	movzx	eax, WORD [rax]			; eax = second number[first number lentgh - i - 1]
-	cmp	dx, ax
-	jle	.loop_body11_2
-	jmp .first_is_bigger_end
-.loop_body11_2:
-	mov	eax, DWORD -32[rbp]
-	sub	eax, DWORD -4[rbp]
-	cdqe
-	add	rax, rax
-	lea	rdx, -2[rax]
-	mov	rax, QWORD -24[rbp]
-	add	rax, rdx
-	movzx	edx, WORD [rax]			; edx = first number[first number lentgh - i - 1]
-	mov	eax, DWORD -32[rbp]
-	sub	eax, DWORD -4[rbp]
-	cdqe
-	add	rax, rax
-	lea	rcx, -2[rax]
-	mov	rax, QWORD -40[rbp]
-	add	rax, rcx
-	movzx	eax, WORD [rax]			; eax = second number[first number lentgh - i - 1]
-	cmp	dx, ax
-	jge	.continue_loop11
-	jmp .second_is_bigger_end
-.continue_loop11:
-	add	DWORD -4[rbp], 1
-.check_loop_condition11:
-	mov	eax, DWORD -4[rbp]
-	cmp	eax, DWORD -32[rbp]			; compare i and first number lentgh
-	jl	.loop_body11_1
-	jmp .second_is_bigger_end
-.first_is_bigger_end:
-	mov	rdi, QWORD -24[rbp]			; 1st parameter of first_input_is_bigger = -24[rbp] = address(first number array[0])
-	mov	esi, DWORD -28[rbp]			; 2nd parameter of first_input_is_bigger = -28[rbp] = first number sign
-	mov	edx, DWORD -32[rbp]			; 3rd parameter of first_input_is_bigger = -32[rbp] = first number lentgh
-	mov	rcx, QWORD -40[rbp]			; 4th parameter of first_input_is_bigger = -40[rbp] = address(second number array[0])
-	mov	r8d, DWORD -44[rbp]			; 5th parameter of first_input_is_bigger = -44[rbp] = second number sign
-	mov	r9d, DWORD -48[rbp]			; 6th parameter of first_input_is_bigger = -48[rbp] = second number lentgh
-	jmp	.func_end
-.second_is_bigger_end:
-	mov	rdi, QWORD -40[rbp]			; 1st parameter of first_input_is_bigger = -40[rbp] = address(second number array[0])
-	mov	esi, DWORD -44[rbp]			; 2nd parameter of first_input_is_bigger = -44[rbp] = second number sign
-	mov	edx, DWORD -48[rbp]			; 3rd parameter of first_input_is_bigger = -48[rbp] = second number lentgh
-	mov	rcx, QWORD -24[rbp]			; 4th parameter of first_input_is_bigger = -24[rbp] = address(first number array[0])
-	mov	r8d, DWORD -28[rbp]			; 5th parameter of first_input_is_bigger = -28[rbp] = first number sign
-	mov	r9d, DWORD -32[rbp]			; 6th parameter of first_input_is_bigger = -32[rbp] = first number lentgh
-.func_end:
-	push	QWORD 56[rbp]			; 7th parameter of first_input_is_bigger = 56[rbp] = address(smaller number lentgh)
-	push	QWORD 48[rbp]			; 8th parameter of first_input_is_bigger = 48[rbp] = address(smaller number sign)
-	push	QWORD 40[rbp]			; 9th parameter of first_input_is_bigger = 40[rbp] = address(smaller number[0])
-	push	QWORD 32[rbp]			; 10th parameter of first_input_is_bigger = 32[rbp] = address(bigger number lentgh)
-	push	QWORD 24[rbp]			; 11th parameter of first_input_is_bigger = 24[rbp] = address(bigger number sign)
-	push	QWORD 16[rbp]			; 12th parameter of first_input_is_bigger = 16[rbp] = address(bigger number[0])
-	call	first_input_is_bigger
-	add	rsp, 48
-	leave
-	ret
-
+	stmg	%r6,%r15,48(%r15)
+	lay	%r15,-256(%r15)
+	lgr	%r11,%r15
+	stg	%r2,240(%r11)						# 240(%r11) = address(first number[0])
+	lgr	%r1,%r3
+	lgr	%r3,%r4
+	stg	%r5,224(%r11)						# 224(%r11) = address(second number[0])
+	lgr	%r2,%r6
+	st	%r1,236(%r11)						# 236(%r11) = first number sign
+	lr	%r1,%r3
+	st	%r1,232(%r11)						# 232(%r11) = first number len
+	lr	%r1,%r2			
+	st	%r1,220(%r11)						# 220(%r11) = second number sign
+	l	%r1,232(%r11)
+	c	%r1,420(%r11)						# 420(%r11) = second number len
+	jle	.check_lens								# compare first and second number len
+	j .firsts_bigger
+.check_lens:
+	c	%r1,420(%r11)						# compare first and second number len
+	jhe	.begin_loop4
+	j .second_bigger
+.begin_loop4:
+	mvhi	252(%r11),0						# 252(%r11) = loop temp number = i
+	j	.check_loop4_condition
+.loop4_body_1:
+	l	%r1,232(%r11)
+	s	%r1,252(%r11)
+	lgfr	%r1,%r1
+	sllg	%r1,%r1,1
+	aghi	%r1,-2
+	ag	%r1,240(%r11)
+	lh	%r3,0(%r1)							# %r3 = first number[first number len - i - 1]
+	l	%r1,232(%r11)
+	s	%r1,252(%r11)
+	lgfr	%r1,%r1
+	sllg	%r1,%r1,1
+	aghi	%r1,-2
+	ag	%r1,224(%r11)
+	lh	%r2,0(%r1)							# %r2 = second number[second number len - i -1]
+	lhr	%r1,%r3
+	lhr	%r2,%r2
+	cr	%r1,%r2								# compare %r3 and %r2
+	jle	.loop4_body_2
+	j .firsts_bigger
+.loop4_body_2:
+	cr	%r1,%r2								# compare %r3 and %r2
+	jhe	.loop4_continue
+	j .second_bigger
+.loop4_continue:
+	asi	252(%r11),1							# i++
+.check_loop4_condition:
+	l	%r1,252(%r11)
+	c	%r1,232(%r11)
+	jl	.loop4_body_1
+.second_bigger:
+	lgf	%r4,236(%r11)
+	lgf	%r3,420(%r11)
+	lgf	%r2,220(%r11)
+	lg	%r1,464(%r11)					# 464(%r11) = address(smaller number len)
+	stg	%r1,208(%r15)
+	lg	%r1,456(%r11)					# 456(%r11) = address(smaller number sign)
+	stg	%r1,200(%r15)
+	lg	%r1,448(%r11)					# 448(%r11) = address(smaller number[0])
+	stg	%r1,192(%r15)
+	lg	%r1,440(%r11)					# 440(%r11) = address(bigger number len)
+	stg	%r1,184(%r15)
+	lg	%r1,432(%r11)					# 432(%r11) = address(bigger number sign)
+	stg	%r1,176(%r15)
+	lg	%r1,424(%r11)					# 424(%r11) = address(bigger number[0])
+	stg	%r1,168(%r15)
+	lgf	%r1,232(%r11)
+	stg	%r1,160(%r15)
+	lgr	%r6,%r4
+	lg	%r5,240(%r11)
+	lgr	%r4,%r3
+	lgr	%r3,%r2
+	lg	%r2,224(%r11)					# set second number as bigger
+	brasl	%r14,first_input_is_bigger
+	j	.set_end
+.firsts_bigger:
+	lg	%r1,464(%r11)			
+	stg	%r1,208(%r15)
+	lg	%r1,456(%r11)
+	stg	%r1,200(%r15)
+	lg	%r1,448(%r11)					
+	stg	%r1,192(%r15)
+	lg	%r1,440(%r11)				
+	stg	%r1,184(%r15)
+	lg	%r1,432(%r11)					
+	stg	%r1,176(%r15)
+	lg	%r1,424(%r11)					
+	stg	%r1,168(%r15)
+	lgf	%r1,420(%r11)
+	stg	%r1,160(%r15)
+	lgf	%r6,220(%r11)
+	lgr	%r6,%r6
+	lg	%r5,224(%r11)
+	lgf	%r4,232(%r11)
+	lgr	%r4,%r4
+	lgf	%r3,236(%r11)
+	lgr	%r3,%r3
+	lg	%r2,240(%r11)					# set first number as bigger
+	brasl	%r14,first_input_is_bigger
+.set_end:
+	lmg	%r6,%r15,304(%r11)
+	br	%r14
 
 first_input_is_bigger:
-	push	rbp
-	mov	rbp, rsp
-	mov	QWORD -24[rbp], rdi			; -24[rbp] = address(first number array[0])
-	mov	DWORD -28[rbp], esi			; -28[rbp] = first number sign
-	mov	DWORD -32[rbp], edx			; -32[rbp] = first number lentgh
-	mov	QWORD -40[rbp], rcx			; -40[rbp] = address(second number array[0])
-	mov	DWORD -44[rbp], r8d			; -44[rbp] = second number sign
-	mov	DWORD -48[rbp], r9d			; -48[rbp] = second number lentgh
-	mov	rax, QWORD 32[rbp]			; rax = address(bigger number lentgh)
-	mov	edx, DWORD -32[rbp]			; edx = first number lentgh
-	mov	DWORD [rax], edx			; [rax] = bigger number lentgh = first number lentgh
-	mov	rax, QWORD 24[rbp]			; rax = address(bigger number sign)
-	mov	edx, DWORD -28[rbp]
-	mov	DWORD [rax], edx			; [rax] = bigger number sign = first number sign
-	mov	rax, QWORD 56[rbp]
-	mov	edx, DWORD -48[rbp]
-	mov	DWORD [rax], edx			; [rax] = smaller number lentgh = second number lentgh
-	mov	rax, QWORD 48[rbp]
-	mov	edx, DWORD -44[rbp]
-	mov	DWORD [rax], edx			; [rax] = smaller number sign = second number sign
-	mov	DWORD -8[rbp], 0			; -8[rbp] = loop temp number = i 
-	jmp	.initialize_big_number_loop
-.initialize_big_number_i:
-	mov	eax, DWORD -8[rbp]
-	cdqe
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -24[rbp]
-	add	rax, rdx
-	mov	edx, DWORD -8[rbp]			; eax = address(first number[i])
-	movsx	rdx, edx
-	lea	rcx, [rdx+rdx]
-	mov	rdx, QWORD 16[rbp]
-	add	rdx, rcx					; rdx = address(bigger number[i])
-	movzx	eax, WORD [rax]
-	mov	WORD [rdx], ax				; [rdx] = bigger number[i] = first number[i]
-	add	DWORD -8[rbp], 1			; i++
-.initialize_big_number_loop:
-	mov	eax, DWORD -8[rbp]
-	cmp	eax, DWORD -32[rbp]			; compare i and first number lentgh
-	jl	.initialize_big_number_i
-	mov	DWORD -4[rbp], 0			; -4[rbp] = loop temp number = i
-	jmp	.initialize_small_number_loop
-.initialize_small_number_i:
-	mov	eax, DWORD -4[rbp]
-	cdqe
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -40[rbp]
-	add	rax, rdx
-	mov	edx, DWORD -4[rbp]			; eax = address(second number[i])
-	movsx	rdx, edx
-	lea	rcx, [rdx+rdx]
-	mov	rdx, QWORD 40[rbp]			
-	add	rdx, rcx					; rdx = address(smaller number[i])
-	movzx	eax, WORD [rax]
-	mov	WORD [rdx], ax				; [rdx] = smaller number[i] = second number[i]
-	add	DWORD -4[rbp], 1			; i++
-.initialize_small_number_loop:
-	mov	eax, DWORD -4[rbp]
-	cmp	eax, DWORD -48[rbp]			; compare i and second number lentgh
-	jl	.initialize_small_number_i
-	pop	rbp
-	ret
+	ldgr	%f2,%r11
+	lay	%r15,-200(%r15)
+	lgr	%r11,%r15
+	stg	%r2,184(%r11)
+	lgr	%r1,%r3
+	lgr	%r3,%r4
+	stg	%r5,168(%r11)
+	lgr	%r2,%r6
+	st	%r1,180(%r11)
+	lr	%r1,%r3
+	st	%r1,176(%r11)
+	lr	%r1,%r2
+	st	%r1,164(%r11)
+	lg	%r1,384(%r11)
+	l	%r2,176(%r11)
+	st	%r2,0(%r1)
+	lg	%r1,376(%r11)
+	l	%r2,180(%r11)
+	st	%r2,0(%r1)
+	lg	%r1,408(%r11)
+	l	%r2,364(%r11)
+	st	%r2,0(%r1)
+	lg	%r1,400(%r11)
+	l	%r2,164(%r11)
+	st	%r2,0(%r1)
+	mvhi	192(%r11),0					# loop 5 temp number = i
+	j	.check_loop5_condition
+.loop5_body:
+	lgf	%r1,192(%r11)
+	sllg	%r1,%r1,1
+	ag	%r1,184(%r11)
+	lgr	%r2,%r1
+	lgf	%r1,192(%r11)
+	sllg	%r1,%r1,1
+	ag	%r1,368(%r11)
+	lh	%r2,0(%r2)
+	sth	%r2,0(%r1)						# bigger number[i] = first number[i]
+	asi	192(%r11),1
+.check_loop5_condition:
+	l	%r1,192(%r11)
+	c	%r1,176(%r11)					# compare i and first number len
+	jl	.loop5_body
+	mvhi	196(%r11),0					# loop6 temp number = i
+	j	.check_loop6_condition
+.loop6_body:
+	lgf	%r1,196(%r11)
+	sllg	%r1,%r1,1
+	ag	%r1,168(%r11)
+	lgr	%r2,%r1
+	lgf	%r1,196(%r11)
+	sllg	%r1,%r1,1
+	ag	%r1,392(%r11)
+	lh	%r2,0(%r2)
+	sth	%r2,0(%r1)						# smaller number[i] = second number[i]
+	asi	196(%r11),1						# i++
+.check_loop6_condition:
+	l	%r1,196(%r11)
+	c	%r1,364(%r11)					# compare i and second number len
+	jl	.loop6_body
+	lay	%r15,200(%r15)
+	lgdr	%r11,%f2
+	br	%r14
+
+subtract:
+
+	stmg	%r6,%r15,48(%r15)
+	lay	%r15,-200(%r15)
+	lgr	%r11,%r15
+	stg	%r2,192(%r11)
+	lgr	%r1,%r3
+	lgr	%r3,%r4
+	stg	%r5,176(%r11)
+	lgr	%r2,%r6
+	st	%r1,188(%r11)
+	lr	%r1,%r3
+	st	%r1,184(%r11)
+	lr	%r1,%r2
+	st	%r1,172(%r11)
+	l	%r1,172(%r11)
+	lcr	%r1,%r1
+	lgfr	%r4,%r1
+	lgf	%r3,184(%r11)
+	lgf	%r2,188(%r11)
+	lgf	%r1,364(%r11)
+	stg	%r1,160(%r15)
+	lgr	%r6,%r4
+	lg	%r5,176(%r11)
+	lgr	%r4,%r3
+	lgr	%r3,%r2
+	lg	%r2,192(%r11)
+	brasl	%r14,add
+	nopr	%r0
+	lmg	%r6,%r15,248(%r11)
+	br	%r14
+
+print_array:
+	stmg	%r11,%r15,88(%r15)
+	lay	%r15,-184(%r15)
+	lgr	%r11,%r15
+	stg	%r2,168(%r11)
+	lgr	%r1,%r3
+	lgr	%r2,%r4
+	st	%r1,164(%r11)
+	lr	%r1,%r2
+	st	%r1,160(%r11)
+	l	%r1,164(%r11)
+	chi	%r1,1
+	jne	.L2
+	lg	%r1,168(%r11)
+	lh	%r1,0(%r1)
+	lhr	%r1,%r1
+	ltr	%r1,%r1
+	jne	.L2
+	mvhi	160(%r11),1
+.L2:
+	l	%r1,160(%r11)
+	chi	%r1,-1
+	jne	.L3
+	lghi	%r2,45
+	brasl	%r14,putchar
+.L3:
+	mvhi	180(%r11),0
+	j	.L4
+.L5:
+	lgf	%r1,180(%r11)
+	sllg	%r1,%r1,1
+	ag	%r1,168(%r11)
+	lh	%r1,0(%r1)
+	lhr	%r1,%r1
+	lgfr	%r1,%r1
+	lgr	%r3,%r1
+	larl	%r2, string
+	brasl	%r14,printf
+	asi	180(%r11),1
+.L4:
+	l	%r1,180(%r11)
+	c	%r1,164(%r11)
+	jl	.L5
+	lghi	%r2,10
+	brasl	%r14,putchar
+	nopr	%r0
+	lmg	%r11,%r15,272(%r11)
+	br	%r14
+
+reverse_array:
+	ldgr	%f2,%r11
+	ldgr	%f0,%r15
+	lay	%r15,-184(%r15)
+	cg	%r0,176(%r15)
+	lgr	%r11,%r15
+	stg	%r2,168(%r11)
+	lgr	%r1,%r3
+	st	%r1,164(%r11)
+	mvhi	180(%r11),0
+	j	.L8
+.L9:
+	lgf	%r1,180(%r11)
+	sllg	%r1,%r1,1
+	ag	%r1,168(%r11)
+	lh	%r1,0(%r1)
+	sth	%r1,178(%r11)
+	l	%r1,164(%r11)
+	s	%r1,180(%r11)
+	lgfr	%r1,%r1
+	sllg	%r1,%r1,1
+	aghi	%r1,-2
+	ag	%r1,168(%r11)
+	lgr	%r2,%r1
+	lgf	%r1,180(%r11)
+	sllg	%r1,%r1,1
+	ag	%r1,168(%r11)
+	lh	%r2,0(%r2)
+	sth	%r2,0(%r1)
+	l	%r1,164(%r11)
+	s	%r1,180(%r11)
+	lgfr	%r1,%r1
+	sllg	%r1,%r1,1
+	aghi	%r1,-2
+	ag	%r1,168(%r11)
+	lh	%r2,178(%r11)
+	sth	%r2,0(%r1)
+	asi	180(%r11),1
+.L8:
+	l	%r1,164(%r11)
+	srlk	%r2,%r1,31
+	ar	%r1,%r2
+	sra	%r1,1
+	lr	%r2,%r1
+	l	%r1,180(%r11)
+	cr	%r1,%r2
+	jl	.L9
+	nopr	%r0
+	nopr	%r0
+	lgdr	%r15,%f0
+	lgdr	%r11,%f2
+	br	%r14
+
+get_number:
+	stmg	%r11,%r15,88(%r15)
+	lay	%r15,-192(%r15)
+	lgr	%r11,%r15
+	stg	%r2,176(%r11)
+	stg	%r3,168(%r11)
+	stg	%r4,160(%r11)
+	mvhi	188(%r11),0
+	j	.L12
+.L13:
+	lgf	%r1,188(%r11)
+	sllg	%r1,%r1,1
+	ag	%r1,176(%r11)
+	mvhhi	0(%r1),0
+	asi	188(%r11),1
+.L12:
+	l	%r1,188(%r11)
+	chi	%r1,99
+	jle	.L13
+	mvhi	188(%r11),0
+	j	.L14
+.L18:
+	llc	%r1,187(%r11)
+	chi	%r1,45
+	jne	.L15
+	lg	%r1,168(%r11)
+	mvhi	0(%r1),-1
+	asi	188(%r11),-1
+	j	.L16
+.L15:
+	llc	%r1,187(%r11)
+	ahi	%r1,-48
+	lr	%r2,%r1
+	lgf	%r1,188(%r11)
+	sllg	%r1,%r1,1
+	ag	%r1,176(%r11)
+	sth	%r2,0(%r1)
+.L16:
+	asi	188(%r11),1
+.L14:
+	brasl	%r14,getchar
+	lgr	%r1,%r2
+	stc	%r1,187(%r11)
+	llc	%r1,187(%r11)
+	chi	%r1,32
+	je	.L17
+	llc	%r1,187(%r11)
+	chi	%r1,10
+	jne	.L18
+.L17:
+	lg	%r1,160(%r11)
+	l	%r2,188(%r11)
+	st	%r2,0(%r1)
+	lg	%r1,160(%r11)
+	l	%r1,0(%r1)
+	lgfr	%r1,%r1
+	lgr	%r3,%r1
+	lg	%r2,176(%r11)
+	brasl	%r14,reverse_array
+	nopr	%r0
+	lmg	%r11,%r15,280(%r11)
+	br	%r14
+
+normalize_array:
+
+	ldgr	%f2,%r11
+	ldgr	%f0,%r15
+	lay	%r15,-184(%r15)
+	cg	%r0,176(%r15)
+	lgr	%r11,%r15
+	stg	%r2,168(%r11)
+	stg	%r3,160(%r11)
+	mvhi	176(%r11),0
+	j	.L37
+.L39:
+	lgf	%r1,176(%r11)
+	sllg	%r1,%r1,1
+	ag	%r1,168(%r11)
+	lh	%r1,0(%r1)
+	ahi	%r1,10
+	lr	%r2,%r1
+	lgf	%r1,176(%r11)
+	sllg	%r1,%r1,1
+	ag	%r1,168(%r11)
+	sth	%r2,0(%r1)
+	lgf	%r1,176(%r11)
+	aghi	%r1,1
+	sllg	%r1,%r1,1
+	ag	%r1,168(%r11)
+	lh	%r1,0(%r1)
+	ahi	%r1,-1
+	lr	%r2,%r1
+	lgf	%r1,176(%r11)
+	aghi	%r1,1
+	sllg	%r1,%r1,1
+	ag	%r1,168(%r11)
+	sth	%r2,0(%r1)
+.L38:
+	lgf	%r1,176(%r11)
+	sllg	%r1,%r1,1
+	ag	%r1,168(%r11)
+	lh	%r1,0(%r1)
+	lhr	%r1,%r1
+	ltr	%r1,%r1
+	jl	.L39
+	j	.L40
+.L42:
+	lgf	%r1,176(%r11)
+	sllg	%r1,%r1,1
+	ag	%r1,168(%r11)
+	lh	%r1,0(%r1)
+	ahi	%r1,-10
+	lr	%r2,%r1
+	lgf	%r1,176(%r11)
+	sllg	%r1,%r1,1
+	ag	%r1,168(%r11)
+	sth	%r2,0(%r1)
+	lgf	%r1,176(%r11)
+	aghi	%r1,1
+	sllg	%r1,%r1,1
+	ag	%r1,168(%r11)
+	lh	%r1,0(%r1)
+	ahi	%r1,1
+	lr	%r2,%r1
+	lgf	%r1,176(%r11)
+	aghi	%r1,1
+	sllg	%r1,%r1,1
+	ag	%r1,168(%r11)
+	sth	%r2,0(%r1)
+	lg	%r1,160(%r11)
+	l	%r1,0(%r1)
+	ahik	%r2,%r1,-1
+	l	%r1,176(%r11)
+	cr	%r1,%r2
+	jne	.L40
+	lgf	%r1,176(%r11)
+	sllg	%r1,%r1,1
+	ag	%r1,168(%r11)
+	lh	%r1,0(%r1)
+	lhr	%r1,%r1
+	chi	%r1,9
+	jh	.L40
+	lg	%r1,160(%r11)
+	l	%r1,0(%r1)
+	ahik	%r2,%r1,1
+	lg	%r1,160(%r11)
+	st	%r2,0(%r1)
+.L40:
+	lgf	%r1,176(%r11)
+	sllg	%r1,%r1,1
+	ag	%r1,168(%r11)
+	lh	%r1,0(%r1)
+	lhr	%r1,%r1
+	chi	%r1,9
+	jh	.L42
+	asi	176(%r11),1
+.L37:
+	lg	%r1,160(%r11)
+	l	%r2,0(%r1)
+	l	%r1,176(%r11)
+	cr	%r1,%r2
+	jl	.L38
+	lg	%r1,160(%r11)
+	l	%r1,0(%r1)
+	ahi	%r1,-1
+	st	%r1,180(%r11)
+	j	.L44
+.L48:
+	lgf	%r1,180(%r11)
+	sllg	%r1,%r1,1
+	ag	%r1,168(%r11)
+	lh	%r1,0(%r1)
+	lhr	%r1,%r1
+	ltr	%r1,%r1
+	jne	.L49
+	lg	%r1,160(%r11)
+	l	%r1,0(%r1)
+	ahik	%r2,%r1,-1
+	lg	%r1,160(%r11)
+	st	%r2,0(%r1)
+	asi	180(%r11),-1
+.L44:
+	l	%r1,180(%r11)
+	ltr	%r1,%r1
+	jh	.L48
+	j	.L50
+.L49:
+	nopr	%r0
+.L50:
+	nopr	%r0
+	lgdr	%r15,%f0
+	lgdr	%r11,%f2
+	br	%r14
 
 subtract_first_element_from_second:
-	push	rbp
-	mov	rbp, rsp
-	sub	rsp, 48
-	mov	QWORD -24[rbp], rdi			; -24[rbp] = address(bigger number[0])
-	mov	QWORD -32[rbp], rsi			; -32[rbp] = address(bigger number lentgh)
-	mov	QWORD -40[rbp], rdx			; -40[rbp] = address(smaller number[0])
-	mov	DWORD -44[rbp], ecx			; -44[rbp] = smaller number lentgh
-	mov	DWORD -48[rbp], r8d			; -48[rbp] = from
-	mov	DWORD -4[rbp], 0			; -4[rbp] = loop temp number = i
-	jmp	.check_loop_condition12
-.loop_body12:
-	mov	edx, DWORD -4[rbp]
-	mov	eax, DWORD -48[rbp]
-	add	eax, edx
-	cdqe
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -24[rbp]
-	add	rax, rdx
-	movzx	eax, WORD [rax]			; eax = bigger number[i + from]
-	mov	ecx, eax					; ecx = bigger number[i + from]
-	mov	eax, DWORD -4[rbp]
-	cdqe
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -40[rbp]
-	add	rax, rdx
-	movzx	eax, WORD [rax]			; eax = smaller number[i]
-	sub	ecx, eax
-	mov	edx, DWORD -4[rbp]
-	mov	eax, DWORD -48[rbp]
-	add	eax, edx
-	cdqe
-	lea	rdx, [rax+rax]
-	mov	rax, QWORD -24[rbp]
-	add	rax, rdx
-	mov	edx, ecx
-	mov	WORD [rax], dx				; bigger number[i + from] -= smaller number[i]
-	add	DWORD -4[rbp], 1			; i++
-.check_loop_condition12:
-	mov	eax, DWORD -4[rbp]
-	cmp	eax, DWORD -44[rbp]			; compare i and smaler number lentgh
-	jl	.loop_body12
-	mov	rsi, QWORD -32[rbp]			; 2nd parameter of normalize array = address(bigger number lentgh)		
-	mov	rdi, QWORD -24[rbp]			; 1st parameter of normalize array = address(bigger number[0])
-	call	normalize_array
-	leave
-	ret
 
+	stmg	%r11,%r15,88(%r15)
+	lay	%r15,-200(%r15)
+	lgr	%r11,%r15
+	stg	%r2,184(%r11)
+	stg	%r3,176(%r11)
+	stg	%r4,168(%r11)
+	lgr	%r1,%r5
+	lgr	%r2,%r6
+	st	%r1,164(%r11)
+	lr	%r1,%r2
+	st	%r1,160(%r11)
+	mvhi	196(%r11),0
+	j	.L53
+.L54:
+	l	%r1,196(%r11)
+	a	%r1,160(%r11)
+	lgfr	%r1,%r1
+	sllg	%r1,%r1,1
+	ag	%r1,184(%r11)
+	lh	%r1,0(%r1)
+	lr	%r2,%r1
+	lgf	%r1,196(%r11)
+	sllg	%r1,%r1,1
+	ag	%r1,168(%r11)
+	lh	%r1,0(%r1)
+	srk	%r1,%r2,%r1
+	lr	%r2,%r1
+	l	%r1,196(%r11)
+	a	%r1,160(%r11)
+	lgfr	%r1,%r1
+	sllg	%r1,%r1,1
+	ag	%r1,184(%r11)
+	sth	%r2,0(%r1)
+	asi	196(%r11),1
+.L53:
+	l	%r1,196(%r11)
+	c	%r1,164(%r11)
+	jl	.L54
+	lg	%r3,176(%r11)
+	lg	%r2,184(%r11)
+	brasl	%r14,normalize_array
+	nopr	%r0
+	lmg	%r11,%r15,288(%r11)
+	br	%r14
+
+multiple:
+
+	stmg	%r11,%r15,88(%r15)
+	lay	%r15,-424(%r15)
+	lgr	%r11,%r15
+	stg	%r2,184(%r11)
+	lgr	%r1,%r3
+	lgr	%r3,%r4
+	stg	%r5,168(%r11)
+	lgr	%r2,%r6
+	st	%r1,180(%r11)
+	lr	%r1,%r3
+	st	%r1,176(%r11)
+	lr	%r1,%r2
+	st	%r1,164(%r11)
+	ear	%r1,%a0
+	sllg	%r1,%r1,32
+	ear	%r1,%a1
+	mvc	416(8,%r11),40(%r1)
+	l	%r1,176(%r11)
+	a	%r1,588(%r11)
+	ahi	%r1,1
+	st	%r1,192(%r11)
+	la	%r1,192(%r11)
+	stg	%r1,208(%r11)
+	mvhi	196(%r11),0
+	j	.L69
+.L70:
+	lgf	%r1,196(%r11)
+	sllg	%r1,%r1,1
+	la	%r1,216(%r1,%r11)
+	mvhhi	0(%r1),0
+	asi	196(%r11),1
+.L69:
+	l	%r1,196(%r11)
+	chi	%r1,99
+	jle	.L70
+	mvhi	200(%r11),0
+	j	.L71
+.L74:
+	mvhi	204(%r11),0
+	j	.L72
+.L73:
+	l	%r1,200(%r11)
+	a	%r1,204(%r11)
+	lgfr	%r1,%r1
+	sllg	%r1,%r1,1
+	lh	%r1,216(%r1,%r11)
+	lr	%r2,%r1
+	lgf	%r1,200(%r11)
+	sllg	%r1,%r1,1
+	ag	%r1,184(%r11)
+	lh	%r1,0(%r1)
+	lr	%r3,%r1
+	lgf	%r1,204(%r11)
+	sllg	%r1,%r1,1
+	ag	%r1,168(%r11)
+	lh	%r1,0(%r1)
+	msr	%r1,%r3
+	ar	%r1,%r2
+	lr	%r2,%r1
+	l	%r1,200(%r11)
+	a	%r1,204(%r11)
+	lgfr	%r1,%r1
+	sllg	%r1,%r1,1
+	sth	%r2,216(%r1,%r11)
+	asi	204(%r11),1
+.L72:
+	l	%r1,204(%r11)
+	c	%r1,588(%r11)
+	jl	.L73
+	asi	200(%r11),1
+.L71:
+	l	%r1,200(%r11)
+	c	%r1,176(%r11)
+	jl	.L74
+	aghik	%r1,%r11,216
+	lg	%r3,208(%r11)
+	lgr	%r2,%r1
+	brasl	%r14,normalize_array
+	l	%r1,192(%r11)
+	lgfr	%r2,%r1
+	aghik	%r1,%r11,216
+	lgr	%r3,%r2
+	lgr	%r2,%r1
+	brasl	%r14,reverse_array
+	l	%r1,192(%r11)
+	l	%r2,180(%r11)
+	ms	%r2,164(%r11)
+	lgfr	%r3,%r2
+	lgfr	%r2,%r1
+	aghik	%r1,%r11,216
+	lgr	%r4,%r3
+	lgr	%r3,%r2
+	lgr	%r2,%r1
+	brasl	%r14,print_array
+	nopr	%r0
+	ear	%r1,%a0
+	sllg	%r1,%r1,32
+	ear	%r1,%a1
+	clc	416(8,%r11),40(%r1)
+	je	.L75
+	brasl	%r14,__stack_chk_fail
+.L75:
+	lmg	%r11,%r15,512(%r11)
+	br	%r14
+
+divide:
+
+	stmg	%r6,%r15,48(%r15)
+	lay	%r15,-432(%r15)
+	lgr	%r11,%r15
+	stg	%r2,184(%r11)
+	lgr	%r1,%r3
+	lgr	%r3,%r4
+	stg	%r5,168(%r11)
+	lgr	%r2,%r6
+	st	%r1,180(%r11)
+	lr	%r1,%r3
+	st	%r1,176(%r11)
+	lr	%r1,%r2
+	st	%r1,164(%r11)
+	ear	%r1,%a0
+	sllg	%r1,%r1,32
+	ear	%r1,%a1
+	mvc	424(8,%r11),40(%r1)
+	mvhi	196(%r11),0
+	j	.L78
+.L79:
+	lgf	%r1,196(%r11)
+	sllg	%r1,%r1,1
+	la	%r1,224(%r1,%r11)
+	mvhhi	0(%r1),0
+	asi	196(%r11),1
+.L78:
+	l	%r1,196(%r11)
+	chi	%r1,99
+	jle	.L79
+	la	%r1,176(%r11)
+	stg	%r1,208(%r11)
+	j	.L80
+.L81:
+	l	%r1,176(%r11)
+	s	%r1,596(%r11)
+	ahi	%r1,-1
+	lgfr	%r1,%r1
+	sllg	%r1,%r1,1
+	lh	%r1,224(%r1,%r11)
+	ahi	%r1,1
+	lr	%r2,%r1
+	l	%r1,176(%r11)
+	s	%r1,596(%r11)
+	ahi	%r1,-1
+	lgfr	%r1,%r1
+	sllg	%r1,%r1,1
+	sth	%r2,224(%r1,%r11)
+	l	%r1,176(%r11)
+	s	%r1,596(%r11)
+	ahi	%r1,-1
+	lgfr	%r2,%r1
+	lgf	%r1,596(%r11)
+	lgr	%r6,%r2
+	lgr	%r5,%r1
+	lg	%r4,168(%r11)
+	lg	%r3,208(%r11)
+	lg	%r2,184(%r11)
+	brasl	%r14,subtract_first_element_from_second
+.L80:
+	l	%r2,176(%r11)
+	l	%r1,596(%r11)
+	cr	%r1,%r2
+	jl	.L81
+	j	.L82
+.L83:
+	l	%r1,176(%r11)
+	s	%r1,596(%r11)
+	lgfr	%r1,%r1
+	sllg	%r1,%r1,1
+	lh	%r1,224(%r1,%r11)
+	ahi	%r1,1
+	lr	%r2,%r1
+	l	%r1,176(%r11)
+	s	%r1,596(%r11)
+	lgfr	%r1,%r1
+	sllg	%r1,%r1,1
+	sth	%r2,224(%r1,%r11)
+	lgf	%r1,596(%r11)
+	lghi	%r6,0
+	lgr	%r5,%r1
+	lg	%r4,168(%r11)
+	lg	%r3,208(%r11)
+	lg	%r2,184(%r11)
+	brasl	%r14,subtract_first_element_from_second
+.L82:
+	lgf	%r1,596(%r11)
+	sllg	%r1,%r1,1
+	aghi	%r1,-2
+	ag	%r1,184(%r11)
+	lh	%r3,0(%r1)
+	lgf	%r1,596(%r11)
+	sllg	%r1,%r1,1
+	aghi	%r1,-2
+	ag	%r1,168(%r11)
+	lh	%r2,0(%r1)
+	lhr	%r1,%r3
+	lhr	%r2,%r2
+	cr	%r1,%r2
+	jh	.L83
+	lh	%r1,224(%r11)
+	ahi	%r1,1
+	sth	%r1,224(%r11)
+	l	%r1,596(%r11)
+	ahi	%r1,-1
+	st	%r1,200(%r11)
+	j	.L84
+.L88:
+	lgf	%r1,200(%r11)
+	sllg	%r1,%r1,1
+	ag	%r1,168(%r11)
+	lh	%r3,0(%r1)
+	lgf	%r1,200(%r11)
+	sllg	%r1,%r1,1
+	ag	%r1,184(%r11)
+	lh	%r2,0(%r1)
+	lhr	%r1,%r3
+	lhr	%r2,%r2
+	cr	%r1,%r2
+	jle	.L85
+	lh	%r1,224(%r11)
+	ahi	%r1,-1
+	sth	%r1,224(%r11)
+	j	.L86
+.L85:
+	lgf	%r1,200(%r11)
+	sllg	%r1,%r1,1
+	ag	%r1,184(%r11)
+	lh	%r3,0(%r1)
+	lgf	%r1,200(%r11)
+	sllg	%r1,%r1,1
+	ag	%r1,168(%r11)
+	lh	%r2,0(%r1)
+	lhr	%r1,%r3
+	lhr	%r2,%r2
+	cr	%r1,%r2
+	jh	.L94
+	asi	200(%r11),-1
+.L84:
+	l	%r1,200(%r11)
+	ltr	%r1,%r1
+	jhe	.L88
+	j	.L86
+.L94:
+	nopr	%r0
+.L86:
+	mvhi	204(%r11),100
+	j	.L89
+.L92:
+	lgf	%r1,204(%r11)
+	sllg	%r1,%r1,1
+	lh	%r1,224(%r1,%r11)
+	lhr	%r1,%r1
+	ltr	%r1,%r1
+	jh	.L95
+	asi	204(%r11),-1
+.L89:
+	l	%r1,204(%r11)
+	ltr	%r1,%r1
+	jh	.L92
+	j	.L91
+.L95:
+	nopr	%r0
+.L91:
+	l	%r1,204(%r11)
+	ahi	%r1,1
+	st	%r1,192(%r11)
+	la	%r1,192(%r11)
+	stg	%r1,216(%r11)
+	aghik	%r1,%r11,224
+	lg	%r3,216(%r11)
+	lgr	%r2,%r1
+	brasl	%r14,normalize_array
+	l	%r1,192(%r11)
+	lgfr	%r2,%r1
+	aghik	%r1,%r11,224
+	lgr	%r3,%r2
+	lgr	%r2,%r1
+	brasl	%r14,reverse_array
+	l	%r1,192(%r11)
+	l	%r2,180(%r11)
+	ms	%r2,164(%r11)
+	lgfr	%r3,%r2
+	lgfr	%r2,%r1
+	aghik	%r1,%r11,224
+	lgr	%r4,%r3
+	lgr	%r3,%r2
+	lgr	%r2,%r1
+	brasl	%r14,print_array
+	nopr	%r0
+	ear	%r1,%a0
+	sllg	%r1,%r1,32
+	ear	%r1,%a1
+	clc	424(8,%r11),40(%r1)
+.L93:
+	lmg	%r6,%r15,480(%r11)
+	br	%r14
 

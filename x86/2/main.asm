@@ -184,12 +184,12 @@ asm_main:
 	mov	eax, DWORD -148[rbp]
 	cmp	DWORD -124[rbp], eax				; compare k and n
 	jl	.loop4_body
-	jmp	.outer_loop2_continue
+	jmp	.outer_loop2_continue				; break
 .continue_inner_loop2:
 	add	DWORD -132[rbp], 1					; j++
 .check_inner_loop2_condition:
 	mov	eax, DWORD -148[rbp]
-	cmp	DWORD -132[rbp], eax
+	cmp	DWORD -132[rbp], eax				; compare j and n
 	jl	.inner_loop2_body
 .outer_loop2_continue:
 	add	DWORD -136[rbp], 1					; i++

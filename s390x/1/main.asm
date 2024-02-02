@@ -35,13 +35,14 @@ asm_main:
 	l	%r1,188(%r11)
 	lgfr	%r1,%r1
 	stg	%r1,160(%r15)						# 6th parameter func = second number len
-	lr %r7, %r1
-	aghik	%r0,%r11,184					
-	lgr	%r6,%r0								# 5th parameter func = second number sign
+	lr %r7,%r1
+	l	%r6,184(%r11)					
+	lgfr	%r6,%r6								# 5th parameter func = second number sign
 	aghik	%r5,%r11,424					# 4th parameter func = address(second number[0])
 	l	%r4,180(%r11)
 	lgfr	%r4,%r4							# 3rd parameter func = first number len
-	aghik	%r3,%r11,176					# 2nd parameter func = first number sign
+	l	%r3,176(%r11)
+	lgfr	%r3,%r3							# 2nd parameter func = first number sign
 	aghik	%r2,%r11,224					# 1st parameter func = address(first number[0])
 	j .check_is_add
 .check_is_add:
@@ -65,8 +66,14 @@ asm_main:
 .check_is_divide:
 	llc	%r1,175(%r11)
 	chi	%r1,47								# compare character and '/'
-	jne	.check_loop1_condition
+	jne	.check_is_remainder
 	brasl	%r14,divide
+	j .check_loop1_condition
+.check_is_remainder:
+	llc	%r1,175(%r11)
+	chi	%r1,37								# compare character and '/'
+	jne	.check_loop1_condition
+	brasl	%r14,remainder
 .check_loop1_condition:
 	brasl	%r14,getchar
 	lgr	%r1,%r2
@@ -125,7 +132,7 @@ add:
 	mvhhi	0(%r1),0						# output[bigger number len] = 0
 	l	%r1,236(%r11)
 	c	%r1,220(%r11)						# compare first and second number sign
-	# jne	.signs_isnt_equal					# TODO: problem
+	jne	.signs_isnt_equal					# TODO: problem
 	mvhi	272(%r11),0						# 272(%r11) = loop2 temp number = i
 	j	.check_loop2_condition
 .loop2_body:
@@ -543,7 +550,9 @@ divide:
 	jl	.loop10_body
 	j	.check_loop11_condition
 .loop11_body:
-	ahi	%r2,1
+	lh	%r1,224(%r11)
+	ahi	%r1,1
+	lr	%r2,%r1
 	sth	%r2,224(%r11)			# output[0] += 1
 	lgf	%r1,596(%r11)
 	lghi	%r6,0
@@ -951,4 +960,160 @@ normalize_array:
 .normal_end:
 	lgdr	%r15,%r0
 	lgdr	%r11,%r9
+	br	%r14
+
+
+remainder:
+	stmg	%r6,%r15,48(%r15)
+	lay	%r15,-432(%r15)
+	lgr	%r11,%r15
+	stg	%r2,184(%r11)				# 184(%r11) = address(first number[0])
+	lgr	%r1,%r3
+	st	%r1,180(%r11)				# 180(%r11) = first number sign
+	lgr	%r1,%r4
+	st	%r1,176(%r11)				# 176(%r11) = first number len
+	stg	%r5,168(%r11)				# 168(%r11) = address(second number[0])
+	lgr	%r1,%r6
+	st	%r1,164(%r11)				# 164(%r11) = second number sign
+	lgr	%r1,%r4
+	st	%r1,432(%r11)				# 432(%r11) = first number len
+									# 596(%r11) = second number len
+	mvhi	196(%r11),0				# 196(%r11) = loop9 temp number = i
+	j	.check_loop19_condition
+.loop19_body:
+	lgf	%r1,196(%r11)
+	sllg	%r1,%r1,1
+	la	%r1,224(%r1,%r11)			# 224(%r11) = address(output[0])
+	mvhhi	0(%r1),0				# output[i] = 0
+	asi	196(%r11),1					# i++
+.check_loop19_condition:
+	l	%r1,196(%r11)
+	chi	%r1,99						# compare i and 99
+	jle	.loop19_body
+	la	%r1,176(%r11)
+	stg	%r1,208(%r11)				# 208(%r11) = address(first number len)
+	j	.check_loop20_condition
+.loop20_body:
+	l	%r1,176(%r11)
+	s	%r1,596(%r11)
+	ahi	%r1,-1
+	lgfr	%r1,%r1
+	sllg	%r1,%r1,1
+	lh	%r1,224(%r1,%r11)
+	ahi	%r1,1
+	lr	%r2,%r1
+	l	%r1,176(%r11)
+	s	%r1,596(%r11)
+	ahi	%r1,-1
+	lgfr	%r1,%r1
+	sllg	%r1,%r1,1
+	sth	%r2,224(%r1,%r11)			# output[first number len - second number len - 1] += 1
+	l	%r1,176(%r11)
+	s	%r1,596(%r11)
+	ahi	%r1,-1
+	lgfr	%r2,%r1
+	lgf	%r1,596(%r11)
+	lgr	%r6,%r2
+	lgr	%r5,%r1
+	lg	%r4,168(%r11)
+	lg	%r3,208(%r11)
+	lg	%r2,184(%r11)			#first number-=second number*10^(first len - second len - 1)
+	brasl	%r14,subtract_first_element_from_second
+.check_loop20_condition:
+	l	%r2,176(%r11)
+	l	%r1,596(%r11)
+	cr	%r1,%r2					# compare first and second number len
+	jl	.loop20_body
+	j	.check_loop21_condition
+.loop21_body:
+	lh	%r1,224(%r11)
+	ahi	%r1,1
+	lr	%r2,%r1
+	sth	%r2,224(%r11)			# output[0] += 1
+	lgf	%r1,596(%r11)
+	lghi	%r6,0
+	lgr	%r5,%r1
+	lg	%r4,168(%r11)
+	lg	%r3,208(%r11)
+	lg	%r2,184(%r11)			#first number-=second number
+	brasl	%r14,subtract_first_element_from_second
+.check_loop21_condition:
+	lgf	%r1,596(%r11)
+	sllg	%r1,%r1,1
+	aghi	%r1,-2
+	ag	%r1,184(%r11)
+	lh	%r3,0(%r1)
+	lgf	%r1,596(%r11)
+	sllg	%r1,%r1,1
+	aghi	%r1,-2
+	ag	%r1,168(%r11)
+	lh	%r2,0(%r1)
+	lhr	%r1,%r3
+	lhr	%r2,%r2
+	cr	%r1,%r2			# compare first[first len - 1] and second[first len - 1]
+	jh	.loop21_body
+	lh	%r1,224(%r11)
+	ahi	%r1,1
+	sth	%r1,224(%r11)			# output[i] += 1
+	l	%r1,596(%r11)
+	ahi	%r1,-1
+	st	%r1,200(%r11)			# 200(%r11) = loop12 temp number = i = second number len - 1
+	j	.check_loop22_condition
+.loop22_body_1:
+	lgf	%r1,200(%r11)
+	sllg	%r1,%r1,1
+	ag	%r1,168(%r11)
+	lh	%r3,0(%r1)
+	lgf	%r1,200(%r11)
+	sllg	%r1,%r1,1
+	ag	%r1,184(%r11)
+	lh	%r2,0(%r1)
+	lhr	%r1,%r3
+	lhr	%r2,%r2
+	cr	%r1,%r2				# compare second_number[i] and first_number[i]
+	jle	.loop22_body_2
+	lh	%r1,224(%r11)
+	ahi	%r1,-1
+	sth	%r1,224(%r11)
+	j	.set_len2
+.loop22_body_2:
+	cr	%r1,%r2				# compare second_number[i] and first_number[i]
+	jl	.subtracting_first_and_second
+	asi	200(%r11),-1
+.check_loop22_condition:
+	l	%r1,200(%r11)
+	ltr	%r1,%r1
+	jhe	.loop22_body_1
+.subtracting_first_and_second:
+	lgf	%r1,596(%r11)
+	lghi	%r6,0
+	lgr	%r5,%r1
+	lg	%r4,168(%r11)
+	lg	%r3,208(%r11)
+	lg	%r2,184(%r11)			#first number-=second number
+	brasl	%r14,subtract_first_element_from_second
+.set_len2:
+	l %r1,432(%r11)
+	l %r2,596(%r11)
+	sr %r1,%r2
+	ahi %r1,1
+	st	%r1,192(%r11)					# set output len = first len - second len + 1
+	la	%r1,192(%r11)
+	stg	%r1,216(%r11)
+	lg	%r3,208(%r11)
+	lg	%r2,184(%r11)
+	brasl	%r14,normalize_array		# normalize array
+	l	%r1,176(%r11)
+	lgfr	%r3,%r1
+	lg	%r2,184(%r11)
+	brasl	%r14,reverse_array			# reverse array
+	l	%r1,176(%r11)
+	l	%r2,180(%r11)
+	lgfr	%r3,%r2
+	lgfr	%r2,%r1
+	lgr	%r4,%r3
+	lgr	%r3,%r2
+	lg	%r2,184(%r11)
+	brasl	%r14,print_array			# print
+	lmg	%r6,%r15,480(%r11)
 	br	%r14

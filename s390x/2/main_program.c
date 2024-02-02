@@ -1,7 +1,4 @@
 #include <stdio.h>
-#include <math.h>
-#define MIN_DOUBLE 0.00001
-#define MIN_DOUBLE_NEGATIVE -0.00001
 
 
 
